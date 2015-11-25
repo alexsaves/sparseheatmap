@@ -1,0 +1,24 @@
+{
+  "name": "node-heatmap",
+  "version": "0.0.1",
+  "description": "A high speed heatmap generator for Node based on sparse matrices.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://alexsaves@github.com/alexsaves/node-heatmap.git"
+  },
+  "author": "Alexei White <alexei.white@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/alexsaves/node-heatmap/issues"
+  },
+  "homepage": "https://github.com/alexsaves/node-heatmap#readme",
+  "dependencies": {
+    "bindings": "^1.2.1",
+    "nan": "^2.1.0"
+  },
+  "gypfile": true
+}
