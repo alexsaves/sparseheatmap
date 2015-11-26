@@ -69,7 +69,7 @@ NodeHeatmap.prototype.area = function () {
  */
 NodeHeatmap.prototype.compile = function () {
     if (!this._compiledData) {
-        this._compiledData = matrixcombine.compile(this.width, this.height);
+        this._compiledData = matrixcombine.compile(this.width, this.height, this.layout, this.data);
     }
     return this._compiledData;
 };
