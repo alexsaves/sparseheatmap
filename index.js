@@ -1,6 +1,7 @@
 var matrixcombine = require('bindings')('sparsematrix'),
     layouts = require('./layouts.js'),
-    sparsearray = require('./sparsearray.js');
+    sparsearray = require('./sparsearray.js'),
+    Jimp = require("jimp");
 
 /**
  * Sets up a new heatmap
@@ -8,9 +9,11 @@ var matrixcombine = require('bindings')('sparsematrix'),
  * @param height (Number) the height of the final heatmap
  * @param layout (NodeHeatmap.LAYOUTS) the layout of the page
  * @param arrayofsparsearrays (Array{NodeHeatmap.SparseArray}) array of sparse arrays
+ * @param blobtype {NodeHeatmap.BLOBTYPE} The type of blob to draw with
+ * @param initcallback (Function) Callback to fire after initialization is complete
  * @constructor
  */
-var NodeHeatmap = function (width, height, layout, arrayofsparsearrays) {
+var NodeHeatmap = function (width, height, layout, arrayofsparsearrays, blobtype, initcallback) {
     var instructions = "Usage: var hm = new NodeHeatmap(width, height, layout, arrayofsparsearrays);\n\n";
     if (!width || !height || width < 1 || height < 1) {
         throw new Error(instructions + "Please provide non-zero width and height.");
@@ -44,6 +47,40 @@ var NodeHeatmap = function (width, height, layout, arrayofsparsearrays) {
     }
     this.data = arrayofsparsearrays;
     this._compiledData = null;
+    if (!initcallback || typeof(initcallback) != 'function') {
+        throw new Error(instructions + "Missing initialization callback.");
+    }
+    this.initCallback = initcallback;
+    if (typeof(blobtype) != 'string') {
+        throw new Error(instructions + "Missing blobtype.");
+    }
+    this.blobtype = blobtype;
+    this._blobImg = [];
+    this._blobWidth = 0;
+    this._blobHeight = 0;
+    var ctx = this;
+    Jimp.read("./assets/" + blobtype, function (err, blobimg) {
+        if (err) {
+            throw err;
+        }
+        ctx._blobWidth = blobimg.bitmap.width;
+        ctx._blobHeight = blobimg.bitmap.height;
+        blobimg.scan(0, 0, blobimg.bitmap.width, blobimg.bitmap.height, function (x, y, idx) {
+            // x, y is the position of this pixel on the image
+            // idx is the position start position of this rgba tuple in the bitmap Buffer
+            // this is the image
+
+            var red = this.bitmap.data[idx + 0];
+            var green = this.bitmap.data[idx + 1];
+            var blue = this.bitmap.data[idx + 2];
+            var alpha = this.bitmap.data[idx + 3];
+            ctx._blobImg.push(red);
+
+            // rgba values run from 0 - 255
+            // e.g. this.bitmap.data[idx] = 0; // removes red from this pixel
+        });
+        initcallback.apply(ctx);
+    });
 };
 
 /**
@@ -55,6 +92,15 @@ NodeHeatmap.LAYOUTS = layouts;
  * Make available the sparse array class
  */
 NodeHeatmap.SparseArray = sparsearray;
+
+/**
+ * Describes the type of blob
+ * @type {{LARGE: string, SMALL: string}}
+ */
+NodeHeatmap.BLOBTYPE = {
+    LARGE: "largeblob.png",
+    SMALL: "smallblob.png"
+};
 
 /**
  * Get the area

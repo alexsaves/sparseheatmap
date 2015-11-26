@@ -21,6 +21,14 @@ Sparsearray::Sparsearray() {
 }
 
 /**
+ * Destructor for a new sparse array
+ */
+Sparsearray::~Sparsearray() {
+  delete [] data;
+  data = NULL;
+}
+
+/**
  * JavaScript Nan constructor
  */
 Nan::Persistent<v8::Function> Sparsearray::constructor;

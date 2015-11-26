@@ -6,7 +6,9 @@ data.push(new heatmap.SparseArray(400, 600, new Array(1, 13, 94, 1, 183, 202, 1,
 data.push(new heatmap.SparseArray(700, 300, new Array(1, 93, 94, 1, 203, 301, 1, 201, 210)));
 data.push(new heatmap.SparseArray(400, 900, new Array(1, 63, 94, 1, 301, 9, 1, 109, 421)));
 
-var hm = new heatmap(100, 250, heatmap.LAYOUTS.CENTERFIXEDWIDTH, data);
-var res = hm.compile();
+var hm = new heatmap(100, 250, heatmap.LAYOUTS.CENTERFIXEDWIDTH, data, heatmap.BLOBTYPE.LARGE, function () {
+    var res = hm.compile();
+    console.log("The result is ", res);
+});
 
-console.log("The result is ", res);
+

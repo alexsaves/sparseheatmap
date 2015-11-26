@@ -34,9 +34,9 @@ void Compile(const Nan::FunctionCallbackInfo <v8::Value> &info) {
     Sparsematrix matrix(width, height);
 
     v8::Local <v8::Number> num1 = Nan::New(layout);
-    v8::Local <v8::Number> num = Nan::New(width + height + height + matrix.area());
+    v8::Local <v8::Number> num = Nan::New(arr->Length());
 
-    info.GetReturnValue().Set(num1);
+    info.GetReturnValue().Set(num);
 }
 
 /**

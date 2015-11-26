@@ -6,7 +6,6 @@ var SparseArray = function (width, height, dataarray) {
     var instructions = "Constructor for SparseArray. Eg: var a = new SparseArray(width, height, data);\n\n";
     this.width = width;
     this.height = height;
-    this.max = 0;
     this.data = dataarray;
     if (!width || !height || !(dataarray.length)) {
         throw new Error(instructions + "Required arguments: width (Number), height (Number), and dataarray (Array).");
