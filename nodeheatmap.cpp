@@ -9,7 +9,7 @@ using v8::Object;
 using v8::String;
 using v8::Value;
 
-void Add(const Nan::FunctionCallbackInfo <v8::Value> &info) {
+void Compile(const Nan::FunctionCallbackInfo <v8::Value> &info) {
 
     if (info.Length() < 2) {
         Nan::ThrowTypeError("Wrong number of arguments");
@@ -31,8 +31,8 @@ void Add(const Nan::FunctionCallbackInfo <v8::Value> &info) {
 }
 
 void Init(v8::Local <v8::Object> exports) {
-    exports->Set(Nan::New("add").ToLocalChecked(),
-                 Nan::New<v8::FunctionTemplate>(Add)->GetFunction());
+    exports->Set(Nan::New("compile").ToLocalChecked(),
+                 Nan::New<v8::FunctionTemplate>(Compile)->GetFunction());
 }
 
 NODE_MODULE(sparsematrix, Init)

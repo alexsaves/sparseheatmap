@@ -1,5 +1,5 @@
-#ifndef __X_H_INCLUDED__   // if x.h hasn't been included yet...
-#define __X_H_INCLUDED__   //   #define this so the compiler knows it has been included
+#ifndef __SPARSEMATRIX_DEFINED__
+#define __SPARSEMATRIX_DEFINED__
 
 #include <nan.h>
 
