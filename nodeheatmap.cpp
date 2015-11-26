@@ -31,7 +31,7 @@ void Compile(const Nan::FunctionCallbackInfo <v8::Value> &info) {
   double width = info[0]->NumberValue();
   double height = info[1]->NumberValue();
   int layout = info[2]->NumberValue();
-  v8::Local <v8::Array> arr = v8::Local<v8::Array>::Cast(info[3]);
+  v8::Local <v8::Array> dataarr = v8::Local<v8::Array>::Cast(info[3]);
   double blobwidth = info[4]->NumberValue();
   double blobheight = info[5]->NumberValue();
   v8::Local <v8::Array> blobArr = v8::Local<v8::Array>::Cast(info[6]);
@@ -42,10 +42,18 @@ void Compile(const Nan::FunctionCallbackInfo <v8::Value> &info) {
     blobVals[i] = intensityval;
   }
 
-  Sparsematrix matrix(width, height);
+  Sparsearray* obj1 = Nan::ObjectWrap::Unwrap<Sparsearray>(dataarr->Get(0)->ToObject());
+  /*
+  Sparsearray* sparrs = new Sparsearray[dataarr->Length()];
+  for (unsigned int d = 0; d < dataarr->Length(); d++) {
+    Sparsearray* obj1 = Nan::ObjectWrap::Unwrap<Sparsearray>(dataarr->Get(d)->ToObject());
+    sparrs[d] = obj1;
+  }*/
+
+  //Sparsematrix matrix(width, height);
 
   v8::Local <v8::Number> num1 = Nan::New(layout);
-  v8::Local <v8::Number> num = Nan::New(arr->Length());
+  v8::Local <v8::Number> num = Nan::New(dataarr->Length());
 
   info.GetReturnValue().Set(num);
 }
