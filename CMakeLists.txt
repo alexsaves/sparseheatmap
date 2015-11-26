@@ -1,0 +1,13 @@
+cmake_minimum_required(VERSION 3.3)
+project(node_heatmap)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
+set(SOURCE_FILES
+    binding.gyp
+    index.js
+    nodeheatmap.cc
+    sparsematrix.cc
+    sparsematrix.h)
+
+add_executable(node_heatmap ${SOURCE_FILES})

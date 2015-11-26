@@ -1,9 +1,10 @@
 {
   "targets": [
     {
-      "target_name": "addon",
+      "target_name": "sparsematrix",
       "sources": [
-        "sparsematrix.cc"
+        "nodeheatmap.cpp",
+        "sparsematrix.cpp"
       ],
       "include_dirs": [
         "<!(node -e \"require('nan')\")"
