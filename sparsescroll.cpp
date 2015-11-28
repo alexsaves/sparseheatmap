@@ -33,5 +33,10 @@ Sparsescroll::~Sparsescroll() {
  * Integrate a sparse array
  */
 void Sparsescroll::integrate_sparsearray(Sparsearray *sp) {
-
+  int dlen = sp->datalen;
+  for (int idx = 0; idx < dlen; idx++) {
+    if (idx < height - 1) {
+      data[idx] += sp->data[idx];
+    }
+  }
 }

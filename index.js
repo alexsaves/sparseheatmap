@@ -95,7 +95,7 @@ var NodeHeatmap = function (width, height, layout, arrayofsparsearrays, blobtype
             initcallback.apply(ctx);
         });
     } else {
-        setTimeout(function() {
+        setTimeout(function () {
             initcallback.apply(ctx);
         }, 20);
     }
@@ -148,11 +148,34 @@ NodeHeatmap.prototype.compile = function () {
     return this._compiledData;
 };
 
+/**
+ * Get Y
+ */
+NodeHeatmap.prototype.getYScroll = function (y) {
+    if (y < 0 || y >= this.height) {
+        return 0;
+    }
+    return this._compiledData[y];
+};
+
+/**
+ * Get Y float
+ */
+NodeHeatmap.prototype.getFloatScrollY = function (y) {
+    var y1 = Math.floor(y),
+        y2 = Math.ceil(y),
+        yprog = y - y1,
+        cy1 = this.getYScroll(y1),
+        cy2 = this.getYScroll(y2),
+        totalsum = (cy1 * (1 - yprog)) + (cy2 * yprog);
+
+    return totalsum;
+};
 
 /**
  * Get XY
  */
-NodeHeatmap.prototype.get = function (x, y) {
+NodeHeatmap.prototype.getXY = function (x, y) {
     if (x < 0 || y < 0 || x >= this.width || y >= this.height) {
         return 0;
     }
@@ -162,17 +185,17 @@ NodeHeatmap.prototype.get = function (x, y) {
 /**
  * Get XY float
  */
-NodeHeatmap.prototype.getFloat = function (x, y) {
+NodeHeatmap.prototype.getFloatXY = function (x, y) {
     var x1 = Math.floor(x),
         x2 = Math.ceil(x),
         y1 = Math.floor(y),
         y2 = Math.ceil(y),
         xprog = x - x1,
         yprog = y - y1,
-        x1y1 = this.get(x1, y1),
-        x1y2 = this.get(x1, y2),
-        x2y1 = this.get(x2, y1),
-        x2y2 = this.get(x2, y2),
+        x1y1 = this.getXY(x1, y1),
+        x1y2 = this.getXY(x1, y2),
+        x2y1 = this.getXY(x2, y1),
+        x2y2 = this.getXY(x2, y2),
         y1sum = (x1y1 * (1 - xprog)) + (x2y1 * xprog),
         y2sum = (x1y2 * (1 - xprog)) + (x2y2 * xprog),
         totalsum = (y1sum * (1 - yprog)) + (y2sum * yprog);
@@ -189,6 +212,7 @@ NodeHeatmap.prototype.getFloat = function (x, y) {
 NodeHeatmap.prototype.getPNG = function (imageWidth, callback) {
     // Compile things just in case
     this.compile();
+    var tctx = this;
     var imageHeight = Math.round((this.height / this.width) * imageWidth),
         ctx = this,
         image = new Jimp(imageWidth, imageHeight, function (err, image) {
@@ -204,16 +228,32 @@ NodeHeatmap.prototype.getPNG = function (imageWidth, callback) {
                 data = image.bitmap.data,
                 maxVal = ctx.max;
 
-            for (var y = 0; y < imageHeight; y += 1) {
-                for (var x = 0; x < imageWidth; x += 1) {
-                    var intensity = ctx.getFloat(x * incVal, y * incVal) / maxVal;
-                    clr = ce.getColorForIntensity(intensity);
+            if (tctx.layout === layouts.VERTICALSCROLL) {
+                for (var y = 0; y < imageHeight; y += 1) {
+                    var intensity = ctx.getFloatScrollY(y * incVal) / maxVal,
+                        clr = ce.getColorForIntensity(intensity);
                     if (clr) {
-                        idx = (imageWidth * y + x) << 2;
-                        data[idx] = clr.r_byte;
-                        data[idx + 1] = clr.g_byte;
-                        data[idx + 2] = clr.b_byte;
-                        data[idx + 3] = clr.a_byte;
+                        for (var x = 0; x < imageWidth; x += 1) {
+                            idx = (imageWidth * y + x) << 2;
+                            data[idx] = clr.r_byte;
+                            data[idx + 1] = clr.g_byte;
+                            data[idx + 2] = clr.b_byte;
+                            data[idx + 3] = clr.a_byte;
+                        }
+                    }
+                }
+            } else {
+                for (var y = 0; y < imageHeight; y += 1) {
+                    for (var x = 0; x < imageWidth; x += 1) {
+                        var intensity = ctx.getFloatXY(x * incVal, y * incVal) / maxVal;
+                        clr = ce.getColorForIntensity(intensity);
+                        if (clr) {
+                            idx = (imageWidth * y + x) << 2;
+                            data[idx] = clr.r_byte;
+                            data[idx + 1] = clr.g_byte;
+                            data[idx + 2] = clr.b_byte;
+                            data[idx + 3] = clr.a_byte;
+                        }
                     }
                 }
             }
