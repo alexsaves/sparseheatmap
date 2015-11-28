@@ -1,5 +1,7 @@
 #include <nan.h>
 #include <node.h>
+#include <stdio.h>
+#include "sparsescroll.h"
 #include "sparsematrix.h"
 #include "sparsearray.h"
 
@@ -14,7 +16,7 @@ using v8::Array;
 /**
  * Compile a series of sparse arrays to a single sparse matrix
  */
-void Compile(const Nan::FunctionCallbackInfo <v8::Value> &info) {
+void CompileCanvas(const Nan::FunctionCallbackInfo <v8::Value> &info) {
 
   if (info.Length() < 7) {
     Nan::ThrowTypeError("Wrong number of arguments: expected 7.");
@@ -42,49 +44,106 @@ void Compile(const Nan::FunctionCallbackInfo <v8::Value> &info) {
     blobVals[i] = intensityval;
   }
 
-  //Object obj1 = Nan::ObjectWrap::Unwrap<Sparsearray>(dataarr->Get(0)->ToObject());
-  v8::Local <v8::Object> myObj = v8::Local<v8::Object>::Cast(dataarr->Get(0));
-  // 0 == width
-  // 1 == height
-  // 2 == data array
-  //v8::Local <v8::Value> myval = myObj->GetInternalField(2);
+  Sparsearray **sparrs = new Sparsearray *[dataarr->Length()];
 
-  Sparsearray** sparrs = new Sparsearray*[dataarr->Length()];
+  // Do the matrix!
+  Sparsematrix matrix(width, height, blobwidth, blobheight, layout, blobVals);
+
   for (unsigned int d = 0; d < dataarr->Length(); d++) {
-    //Sparsearray* obj1 = Nan::ObjectWrap::Unwrap<Sparsearray>(dataarr->Get(d)->ToObject());
-    Sparsearray* myNewSP = new Sparsearray();
+    Sparsearray *myNewSP = new Sparsearray();
     v8::Local <v8::Object> myObj = v8::Local<v8::Object>::Cast(dataarr->Get(d));
-    myNewSP->width = (unsigned int)myObj->GetInternalField(0)->NumberValue();
-    myNewSP->height = (unsigned int)myObj->GetInternalField(1)->NumberValue();
+    myNewSP->width = (unsigned int) myObj->GetInternalField(0)->NumberValue();
+    myNewSP->height = (unsigned int) myObj->GetInternalField(1)->NumberValue();
     v8::Local <v8::Array> sparseArr = v8::Local<v8::Array>::Cast(myObj->GetInternalField(2));
+    myNewSP->datalen = sparseArr->Length();
     myNewSP->data = new unsigned int[sparseArr->Length()];
     for (unsigned int t = 0; t < sparseArr->Length(); t++) {
       unsigned int scoreval = sparseArr->Get(t)->Uint32Value();
       myNewSP->data[t] = scoreval;
     }
     sparrs[d] = myNewSP;
+
+    matrix.integrate_sparsearray(myNewSP);
   }
 
-  //Sparsematrix matrix(width, height);
-
-  //v8::Local <v8::Number> num1 = Nan::New(bla);
-  v8::Local <v8::Number> num = Nan::New(2);
+  Local <Array> v8Array = Nan::New<Array>();
+  unsigned int matlen = matrix.width * matrix.height;
+  for (unsigned int s = 0; s < matlen; s++) {
+    v8Array->Set(s, Nan::New((double) matrix.data[s]));
+  }
 
   for (unsigned int s = 0; s < dataarr->Length(); s++) {
     delete sparrs[s];
   }
-  delete [] sparrs;
-  delete [] blobVals;
+  delete[] sparrs;
+  delete[] blobVals;
 
-  info.GetReturnValue().Set(num);
+  info.GetReturnValue().Set(v8Array);
+}
+
+/**
+ * Compile a series of sparse arrays to a single sparse matrix
+ */
+void CompileVScroll(const Nan::FunctionCallbackInfo <v8::Value> &info) {
+
+  if (info.Length() < 2) {
+    Nan::ThrowTypeError("Wrong number of arguments: expected 2.");
+    return;
+  }
+
+  if (!info[0]->IsNumber() || !info[1]->IsArray()) {
+    Nan::ThrowTypeError(
+            "Wrong arguments: Expected height (Number), data (Array).");
+    return;
+  }
+
+  double height = info[0]->NumberValue();
+  v8::Local <v8::Array> dataarr = v8::Local<v8::Array>::Cast(info[1]);
+
+  Sparsearray **sparrs = new Sparsearray *[dataarr->Length()];
+
+  // Do the matrix!
+  Sparsescroll matrix(height);
+
+  for (unsigned int d = 0; d < dataarr->Length(); d++) {
+    Sparsearray *myNewSP = new Sparsearray();
+    v8::Local <v8::Object> myObj = v8::Local<v8::Object>::Cast(dataarr->Get(d));
+    myNewSP->width = (unsigned int) myObj->GetInternalField(0)->NumberValue();
+    myNewSP->height = (unsigned int) myObj->GetInternalField(1)->NumberValue();
+    v8::Local <v8::Array> sparseArr = v8::Local<v8::Array>::Cast(myObj->GetInternalField(2));
+    myNewSP->datalen = sparseArr->Length();
+    myNewSP->data = new unsigned int[sparseArr->Length()];
+    for (unsigned int t = 0; t < sparseArr->Length(); t++) {
+      unsigned int scoreval = sparseArr->Get(t)->Uint32Value();
+      myNewSP->data[t] = scoreval;
+    }
+    sparrs[d] = myNewSP;
+
+    matrix.integrate_sparsearray(myNewSP);
+  }
+
+  Local <Array> v8Array = Nan::New<Array>();
+  unsigned int matlen = matrix.height;
+  for (unsigned int s = 0; s < matlen; s++) {
+    v8Array->Set(s, Nan::New((double) matrix.data[s]));
+  }
+
+  for (unsigned int s = 0; s < dataarr->Length(); s++) {
+    delete sparrs[s];
+  }
+  delete[] sparrs;
+
+  info.GetReturnValue().Set(v8Array);
 }
 
 /**
  * Interface with JavaScript and expose our API
  */
 void Init(v8::Local <v8::Object> exports) {
-  exports->Set(Nan::New("compile").ToLocalChecked(),
-               Nan::New<v8::FunctionTemplate>(Compile)->GetFunction());
+  exports->Set(Nan::New("compile_canvas").ToLocalChecked(),
+               Nan::New<v8::FunctionTemplate>(CompileCanvas)->GetFunction());
+  exports->Set(Nan::New("compile_vertical_scroll").ToLocalChecked(),
+               Nan::New<v8::FunctionTemplate>(CompileVScroll)->GetFunction());
 }
 
 // Let node know about this

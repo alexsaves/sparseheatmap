@@ -8,6 +8,6 @@ set(SOURCE_FILES
         index.js
         nodeheatmap.cc
         sparsematrix.cc
-        sparsematrix.h sparsearray.h sparsearray.cpp.cpp sparsearray.cpp.h)
+        sparsematrix.h sparsearray.h sparsearray.cpp.cpp sparsearray.cpp.h sparsescroll.cpp sparsescroll.h)
 
 add_executable(node_heatmap ${SOURCE_FILES})

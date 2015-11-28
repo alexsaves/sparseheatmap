@@ -5,7 +5,8 @@
       "sources": [
         "nodeheatmap.cpp",
         "sparsearray.cpp",
-        "sparsematrix.cpp"
+        "sparsematrix.cpp",
+        "sparsescroll.cpp"
       ],
       "include_dirs": [
         "<!(node -e \"require('nan')\")"

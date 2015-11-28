@@ -1,7 +1,8 @@
 var matrixcombine = require('bindings')('sparsematrix'),
-    layouts = require('./layouts.js'),
-    sparsearray = require('./sparsearray.js'),
-    Jimp = require("jimp");
+    layouts = require('./lib/layouts.js'),
+    sparsearray = require('./lib/sparsearray.js'),
+    Jimp = require("jimp"),
+    ColorEngine = require('./lib/colorengine.js');
 
 /**
  * Sets up a new heatmap
@@ -14,13 +15,18 @@ var matrixcombine = require('bindings')('sparsematrix'),
  * @constructor
  */
 var NodeHeatmap = function (width, height, layout, arrayofsparsearrays, blobtype, initcallback) {
-    var instructions = "Usage: var hm = new NodeHeatmap(width, height, layout, arrayofsparsearrays);\n\n";
+    var instructions = "Usage: var hm = new NodeHeatmap(width, height, layout, arrayofsparsearrays, blobtype, initcallback);\n\n";
     if (!width || !height || width < 1 || height < 1) {
         throw new Error(instructions + "Please provide non-zero width and height.");
     }
     this.width = width;
     this.height = height;
     this.max = 0;
+
+    if (layout === layouts.VERTICALSCROLL) {
+        initcallback = blobtype;
+        blobtype = null;
+    }
 
     var fountLayout = false,
         possibleLayouts = [];
@@ -51,7 +57,7 @@ var NodeHeatmap = function (width, height, layout, arrayofsparsearrays, blobtype
         throw new Error(instructions + "Missing initialization callback.");
     }
     this.initCallback = initcallback;
-    if (typeof(blobtype) != 'string') {
+    if (typeof(blobtype) != 'string' && layout !== layouts.VERTICALSCROLL) {
         throw new Error(instructions + "Missing blobtype.");
     }
     this.blobtype = blobtype;
@@ -59,28 +65,40 @@ var NodeHeatmap = function (width, height, layout, arrayofsparsearrays, blobtype
     this._blobWidth = 0;
     this._blobHeight = 0;
     var ctx = this;
-    Jimp.read("./assets/" + blobtype, function (err, blobimg) {
-        if (err) {
-            throw err;
-        }
-        ctx._blobWidth = blobimg.bitmap.width;
-        ctx._blobHeight = blobimg.bitmap.height;
-        blobimg.scan(0, 0, blobimg.bitmap.width, blobimg.bitmap.height, function (x, y, idx) {
-            // x, y is the position of this pixel on the image
-            // idx is the position start position of this rgba tuple in the bitmap Buffer
-            // this is the image
+    if (layout !== layouts.VERTICALSCROLL) {
+        Jimp.read("./assets/" + blobtype, function (err, blobimg) {
+            if (err) {
+                throw err;
+            }
+            ctx._blobWidth = blobimg.bitmap.width;
+            ctx._blobHeight = blobimg.bitmap.height;
+            var max = 0;
+            blobimg.scan(0, 0, blobimg.bitmap.width, blobimg.bitmap.height, function (x, y, idx) {
+                // x, y is the position of this pixel on the image
+                // idx is the position start position of this rgba tuple in the bitmap Buffer
+                // this is the image
 
-            var red = this.bitmap.data[idx + 0];
-            var green = this.bitmap.data[idx + 1];
-            var blue = this.bitmap.data[idx + 2];
-            var alpha = this.bitmap.data[idx + 3];
-            ctx._blobImg.push(red);
+                var red = this.bitmap.data[idx + 0];
+                var green = this.bitmap.data[idx + 1];
+                var blue = this.bitmap.data[idx + 2];
+                var alpha = this.bitmap.data[idx + 3];
+                max = Math.max(max, red);
+                ctx._blobImg.push(red);
 
-            // rgba values run from 0 - 255
-            // e.g. this.bitmap.data[idx] = 0; // removes red from this pixel
+                // rgba values run from 0 - 255
+                // e.g. this.bitmap.data[idx] = 0; // removes red from this pixel
+            });
+            // Normalize to 20 so the numbers are a bit smaller
+            for (var k = 0; k < ctx._blobImg.length; k++) {
+                ctx._blobImg[k] = Math.round((ctx._blobImg[k] / max) * 50);
+            }
+            initcallback.apply(ctx);
         });
-        initcallback.apply(ctx);
-    });
+    } else {
+        setTimeout(function() {
+            initcallback.apply(ctx);
+        }, 20);
+    }
 };
 
 /**
@@ -115,10 +133,96 @@ NodeHeatmap.prototype.area = function () {
  */
 NodeHeatmap.prototype.compile = function () {
     if (!this._compiledData) {
-        this._compiledData = matrixcombine.compile(this.width, this.height, this.layout, this.data, this._blobWidth, this._blobHeight, this._blobImg);
+        if (this.layout === layouts.VERTICALSCROLL) {
+            this._compiledData = matrixcombine.compile_vertical_scroll(this.height, this.data);
+        } else {
+            this._compiledData = matrixcombine.compile_canvas(this.width, this.height, this.layout, this.data, this._blobWidth, this._blobHeight, this._blobImg);
+        }
+        var cd = this._compiledData,
+            cdl = cd.length;
+        this.max = 0.00000001;
+        for (var i = 0; i < cdl; i++) {
+            this.max = Math.max(this.max, cd[i]);
+        }
     }
     return this._compiledData;
 };
+
+
+/**
+ * Get XY
+ */
+NodeHeatmap.prototype.get = function (x, y) {
+    if (x < 0 || y < 0 || x >= this.width || y >= this.height) {
+        return 0;
+    }
+    return this._compiledData[(y * this.width) + x];
+};
+
+/**
+ * Get XY float
+ */
+NodeHeatmap.prototype.getFloat = function (x, y) {
+    var x1 = Math.floor(x),
+        x2 = Math.ceil(x),
+        y1 = Math.floor(y),
+        y2 = Math.ceil(y),
+        xprog = x - x1,
+        yprog = y - y1,
+        x1y1 = this.get(x1, y1),
+        x1y2 = this.get(x1, y2),
+        x2y1 = this.get(x2, y1),
+        x2y2 = this.get(x2, y2),
+        y1sum = (x1y1 * (1 - xprog)) + (x2y1 * xprog),
+        y2sum = (x1y2 * (1 - xprog)) + (x2y2 * xprog),
+        totalsum = (y1sum * (1 - yprog)) + (y2sum * yprog);
+
+    return totalsum;
+
+};
+
+/**
+ * Get a png of the heatmap assuming a page width and height
+ * @param width - image width
+ * @param callback
+ */
+NodeHeatmap.prototype.getPNG = function (imageWidth, callback) {
+    // Compile things just in case
+    this.compile();
+    var imageHeight = Math.round((this.height / this.width) * imageWidth),
+        ctx = this,
+        image = new Jimp(imageWidth, imageHeight, function (err, image) {
+            image.rgba(true);
+
+            var ce = new ColorEngine(),
+                idx = 0,
+                clr,
+                ph = imageHeight,
+                pw = imageWidth,
+                scaleFactor = imageWidth / ctx.width,
+                incVal = 1 / scaleFactor,
+                data = image.bitmap.data,
+                maxVal = ctx.max;
+
+            for (var y = 0; y < imageHeight; y += 1) {
+                for (var x = 0; x < imageWidth; x += 1) {
+                    var intensity = ctx.getFloat(x * incVal, y * incVal) / maxVal;
+                    clr = ce.getColorForIntensity(intensity);
+                    if (clr) {
+                        idx = (imageWidth * y + x) << 2;
+                        data[idx] = clr.r_byte;
+                        data[idx + 1] = clr.g_byte;
+                        data[idx + 2] = clr.b_byte;
+                        data[idx + 3] = clr.a_byte;
+                    }
+                }
+            }
+            image.getBuffer(Jimp.MIME_PNG, function (err, buf) {
+                callback(buf);
+            });
+        });
+};
+
 
 // Export it
 module.exports = NodeHeatmap;

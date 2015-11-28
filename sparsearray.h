@@ -10,11 +10,12 @@
 class Sparsearray {
 public:
     Sparsearray();
-    Sparsearray(int, int, unsigned int *);
+    Sparsearray(int, int, int, unsigned int *);
     ~Sparsearray();
 
     unsigned int width, height;
     unsigned int* data;
+    unsigned int datalen;
 
     unsigned int area();
 };

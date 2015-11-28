@@ -5,9 +5,10 @@
 /**
  * Constructor for a new sparse array
  */
-Sparsearray::Sparsearray(int w, int h, unsigned int *dta) {
+Sparsearray::Sparsearray(int w, int h, int dl, unsigned int *dta) {
   width = w;
   height = h;
+  datalen = dl;
   data = dta;
 }
 
@@ -17,6 +18,7 @@ Sparsearray::Sparsearray(int w, int h, unsigned int *dta) {
 Sparsearray::Sparsearray() {
   width = 0;
   height = 0;
+  datalen = 0;
   data = NULL;
 }
 
