@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://alexsaves@github.com/alexsaves/node-heatmap.git"
+    "url": "https://github.com/alexsaves/sparseheatmap.git"
   },
   "author": "Alexei White <alexei.white@gmail.com>",
   "license": "ISC",
