@@ -18,15 +18,15 @@ using v8::Array;
  */
 void CompileCanvas(const Nan::FunctionCallbackInfo <v8::Value> &info) {
 
-  if (info.Length() < 7) {
-    Nan::ThrowTypeError("Wrong number of arguments: expected 7.");
+  if (info.Length() < 8) {
+    Nan::ThrowTypeError("Wrong number of arguments: expected 8.");
     return;
   }
 
   if (!info[0]->IsNumber() || !info[1]->IsNumber() || !info[2]->IsNumber() || !info[3]->IsArray() ||
-      !info[4]->IsNumber() || !info[5]->IsNumber() || !info[6]->IsArray()) {
+      !info[4]->IsNumber() || !info[5]->IsNumber() || !info[6]->IsArray() || !info[7]->IsNumber()) {
     Nan::ThrowTypeError(
-            "Wrong arguments: Expected width (Number), height (Number), layout (Number), data (Array), blob width (Number), blob height (Number), blob intensity data (Array).");
+            "Wrong arguments: Expected width (Number), height (Number), layout (Number), data (Array), blob width (Number), blob height (Number), blob intensity data (Array), imageWidth (Number).");
     return;
   }
 
@@ -36,6 +36,7 @@ void CompileCanvas(const Nan::FunctionCallbackInfo <v8::Value> &info) {
   v8::Local <v8::Array> dataarr = v8::Local<v8::Array>::Cast(info[3]);
   double blobwidth = info[4]->NumberValue();
   double blobheight = info[5]->NumberValue();
+  int destImageWidth = (int) info[7]->NumberValue();
   v8::Local <v8::Array> blobArr = v8::Local<v8::Array>::Cast(info[6]);
   unsigned int *blobVals = new unsigned int[blobArr->Length()];
   // Iterate through the blob array, adding each element to our list
@@ -66,10 +67,17 @@ void CompileCanvas(const Nan::FunctionCallbackInfo <v8::Value> &info) {
     matrix.integrate_sparsearray(myNewSP);
   }
 
+  //int *finalImageIntensities = matrix.get_intensity_map(destImageWidth);
+/*
   Local <Array> v8Array = Nan::New<Array>();
-  unsigned int matlen = matrix.width * matrix.height;
-  for (unsigned int s = 0; s < matlen; s++) {
-    v8Array->Set(s, Nan::New((double) matrix.data[s]));
+  for (int s = 0; s < matrix.lastIntensitySize; s++) {
+    v8Array->Set(s, Nan::New((int) finalImageIntensities[s]));
+  }
+*/
+  Local <Array> v8Array = Nan::New<Array>();
+  int dlen = matrix.width * matrix.height;
+  for (int s = 0; s < dlen; s++) {
+    v8Array->Set(s, Nan::New((int) matrix.data[s]));
   }
 
   for (unsigned int s = 0; s < dataarr->Length(); s++) {
@@ -77,6 +85,7 @@ void CompileCanvas(const Nan::FunctionCallbackInfo <v8::Value> &info) {
   }
   delete[] sparrs;
   delete[] blobVals;
+  //delete[] finalImageIntensities;
 
   info.GetReturnValue().Set(v8Array);
 }
@@ -147,4 +156,5 @@ void Init(v8::Local <v8::Object> exports) {
 }
 
 // Let node know about this
-NODE_MODULE(sparsematrix, Init)
+NODE_MODULE(sparsematrix, Init
+)

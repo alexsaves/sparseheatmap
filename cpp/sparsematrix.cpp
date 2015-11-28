@@ -1,6 +1,7 @@
 #include "sparsematrix.h"
 #include <stddef.h>
 #include <node.h>
+#include <math.h>
 
 /**
  * Constructor for a new sparse matrix
@@ -41,6 +42,55 @@ unsigned int Sparsematrix::area() {
 Sparsematrix::~Sparsematrix() {
   delete[] data;
   data = NULL;
+}
+
+/**
+ * Get an intensity map
+ */
+int *Sparsematrix::get_intensity_map(int w) {
+  int h = (int) ((float) w / (float) width) * (float) height;
+  lastIntensityHeight = h;
+  int sz = w * h;
+  int *targ = new int[sz];
+  lastIntensitySize = sz;
+  /*for (int idx = 0; idx < sz; idx++) {
+    max = (max < data[idx]) ? data[idx] : max;
+    targ[idx] = 92;
+  }*/
+
+  /*
+  float fmax = (float)max;
+
+  float hf = (float) h - (float) 1;
+  float wf = (float) w - (float) 1;
+  float myheight = (float) height - (float) 1;
+  float mywidth = (float) width - (float) 1;
+  int index = 0;
+  for (int y = 0; y < h; y++) {
+    float yp = (float) y / hf;
+    float srcy = yp * myheight;
+    int floory = (int) floor(srcy);
+    int ceily = (int) ceil(srcy);
+    int ybase = floory * width;
+    int yceil = ceily * width;
+    float yprog = yp - (float) floory;
+    for (int x = 0; x < w; x++) {
+      float xp = (float) x / wf;
+      float srcx = xp * mywidth;
+      int floorx = (int) floor(srcx);
+      int ceilx = (int) ceil(srcx);
+      float xprog = xp - (float) floorx;
+      float tl = (float) data[ybase + floorx];
+      float tr = (float) data[ybase + ceilx];
+      float bl = (float) data[yceil + floorx];
+      float br = (float) data[yceil + ceilx];
+      float topavr = (tl * (1.0 - xprog)) + (tr * xprog);
+      float botavr = (bl * (1.0 - xprog)) + (br * xprog);
+      float tots = ((topavr * (1.0 - yprog)) + (botavr * yprog)) / fmax;
+      targ[index++] = (int)(tots * 100.0);
+    }
+  }*/
+  return targ;
 }
 
 /**

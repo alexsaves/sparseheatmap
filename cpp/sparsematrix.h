@@ -15,13 +15,15 @@ public:
     unsigned long max;
     unsigned long *data;
     unsigned int *blob;
-    int blobwidth, blobheight;
+    int blobwidth, blobheight, lastIntensityHeight, lastIntensitySize;
 
     void set_size(int, int);
 
     void integrate_sparsearray(Sparsearray *);
 
     void set_blob(int x, int y);
+
+    int * get_intensity_map(int w);
 
     unsigned int area();
 

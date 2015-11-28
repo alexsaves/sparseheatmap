@@ -1,6 +1,8 @@
 var heatmap = require('../index'),
     fs = require('fs');
 
+heatmap._DEBUGMODE_ = true;
+
 var data = [];
 for (var i = 0; i < 250; i++) {
     var dta = [],
