@@ -1,7 +1,10 @@
 #include "sparsescroll.h"
+#include "colorengine.h"
+#include "lodepng.h"
 #include <stddef.h>
 #include <node.h>
 #include <math.h>
+#include <iostream>
 
 /**
  * Constructor for a new sparse matrix
@@ -51,7 +54,7 @@ void Sparsescroll::integrate_sparsearray(Sparsearray *sp) {
 /**
  * Get an intensity map
  */
-char *Sparsescroll::get_intensity_map(int w) {
+unsigned char *Sparsescroll::get_intensity_map(int w, Colorengine *ce) {
   int h = (int) (((float) w / (float) width) * (float) height);
   lastIntensityHeight = h;
   int sz = w * h;
@@ -66,7 +69,7 @@ char *Sparsescroll::get_intensity_map(int w) {
     data[idx] = (unsigned long) ((val / fmax) * 255);
   }
   max = 255;
-  char *targ = new char[sz];
+  unsigned char *targ = new unsigned char[sz * 4];
   double hf = (double) h - (double) 1;
   double myheight = (double) height - (double) 1;
   int index = 0;
@@ -79,11 +82,33 @@ char *Sparsescroll::get_intensity_map(int w) {
     double bb = (double) data[ceily];
     double yprog = srcy - (double) floory;
     double tots = ((tt * (1.0 - yprog)) + (bb * yprog));
-    char ctots = (char) tots;
+    Clr intensity_color = ce->get_color((int)tots);
     for (int x = 0; x < w; x++) {
-      targ[index++] = ctots;
+      targ[index++] = intensity_color.r;
+      targ[index++] = intensity_color.g;
+      targ[index++] = intensity_color.b;
+      targ[index++] = intensity_color.a;
     }
   }
   lastIntensityIndex = index - 1;
-  return targ;
+
+  std::vector<unsigned char> outVect;
+  lodepng::encode(outVect, targ, (unsigned)w, (unsigned)h);
+  lastIntensityIndex = outVect.size();
+  /*std::cout << "Outvect size:";
+  std::cout << x;
+  std::cout << "targ size:";
+  std::cout << lastIntensityIndex;
+  std::cout << "\n";*/
+  //std::vector<unsigned char> v(10);
+  unsigned char* myArr = new unsigned char[outVect.size()];
+  std::copy(outVect.begin(), outVect.end(), myArr);
+  delete [] targ;
+  /*
+   * unsigned lodepng_encode32(unsigned char** out, size_t* outsize,
+                          const unsigned char* image, unsigned w, unsigned h);
+   */
+  //unsigned char* outPNG;
+  //lodepng::lodepng_encode32(outPNG)
+  return myArr;
 }

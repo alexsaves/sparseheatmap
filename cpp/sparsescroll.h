@@ -3,6 +3,7 @@
 
 #include <nan.h>
 #include "sparsearray.h"
+#include "colorengine.h"
 
 class Sparsescroll {
 public:
@@ -16,7 +17,7 @@ public:
 
     void set_size(int, int);
 
-    char *get_intensity_map(int w);
+    unsigned char *get_intensity_map(int, Colorengine *);
 
     void integrate_sparsearray(Sparsearray *);
 

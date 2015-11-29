@@ -1,6 +1,6 @@
 {
   "name": "sparseheatmap",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A high speed heatmap generator for Node based on sparse matrices.",
   "main": "index.js",
   "scripts": {

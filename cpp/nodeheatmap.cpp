@@ -44,11 +44,12 @@ void CompileCanvas(const Nan::FunctionCallbackInfo <v8::Value> &info) {
   v8::Local <v8::Array> blobArr = v8::Local<v8::Array>::Cast(info[6]);
   v8::Local <v8::Array> colorArr = v8::Local<v8::Array>::Cast(info[8]);
 
-  Colorengine c(colorArr->Length());
+  Colorengine *c = new Colorengine(round((float)colorArr->Length() / 4.0));
   for (unsigned int p = 0; p < colorArr->Length(); p += 4) {
-    c.add_color((char) colorArr->Get(p)->Uint32Value(), (char) colorArr->Get(p + 1)->Uint32Value(),
-                (char) colorArr->Get(p + 2)->Uint32Value(), (char) colorArr->Get(p + 3)->Uint32Value());
+    c->add_color((int) colorArr->Get(p)->Uint32Value(), (int) colorArr->Get(p + 1)->Uint32Value(),
+                 (int) colorArr->Get(p + 2)->Uint32Value(), (int) colorArr->Get(p + 3)->Uint32Value());
   }
+  c->prepare();
 
   unsigned int *blobVals = new unsigned int[blobArr->Length()];
   // Iterate through the blob array, adding each element to our list
@@ -79,15 +80,37 @@ void CompileCanvas(const Nan::FunctionCallbackInfo <v8::Value> &info) {
     matrix.integrate_sparsearray(myNewSP);
   }
 
-  char *finalImageIntensities = matrix.get_intensity_map(destImageWidth);
+  unsigned char *finalImageIntensities = matrix.get_intensity_map(destImageWidth, c);
+/*
+  for (int p = 0; p <= matrix.lastIntensityIndex; p += 4) {
+    finalImageIntensities[p] = 255;
+    finalImageIntensities[p + 1] = 0;
+    finalImageIntensities[p + 2] = 0;
+    finalImageIntensities[p + 3] = 255;
+  }*/
+  //Local <Array> v8Array = Nan::New<Array>();
+  /*for (int p = 0; p < (256 * 4); p++) {
+    v8Array->Set(p, Nan::New(c->finalcolors[p]));
+  }*/
+  /*for (int p = 0; p < 4 * 256; p++) {
+    v8Array->Set(p, Nan::New(c->finalcolors[p]));
+  }*/
+  /*v8Array->Set(0, Nan::New(c->finalcolors[(255 * 4)]));
+  v8Array->Set(1, Nan::New(c->finalcolors[(255 * 4) + 1]));
+  v8Array->Set(2, Nan::New(c->finalcolors[(255 * 4) + 2]));
+  v8Array->Set(3, Nan::New(c->finalcolors[(255 * 4)] + 3));
+*/
 
   for (unsigned int s = 0; s < dataarr->Length(); s++) {
     delete sparrs[s];
   }
   delete[] sparrs;
   delete[] blobVals;
+  delete c;
 
-  info.GetReturnValue().Set(Nan::NewBuffer(finalImageIntensities, matrix.lastIntensitySize).ToLocalChecked());
+  //info.GetReturnValue().Set(Nan::NewBuffer(c->finalcolors, 4 * 256).ToLocalChecked());
+  info.GetReturnValue().Set(Nan::NewBuffer((char *)finalImageIntensities, matrix.lastIntensityIndex).ToLocalChecked());
+  //info.GetReturnValue().Set(v8Array);
 }
 
 /**
@@ -117,11 +140,12 @@ void CompileVScroll(const Nan::FunctionCallbackInfo <v8::Value> &info) {
   v8::Local <v8::Array> dataarr = v8::Local<v8::Array>::Cast(info[2]);
   v8::Local <v8::Array> colorArr = v8::Local<v8::Array>::Cast(info[5]);
 
-  Colorengine c(colorArr->Length());
+  Colorengine *c = new Colorengine(round((float)colorArr->Length() / 4.0));
   for (unsigned int p = 0; p < colorArr->Length(); p += 4) {
-    c.add_color((char) colorArr->Get(p)->Uint32Value(), (char) colorArr->Get(p + 1)->Uint32Value(),
-                (char) colorArr->Get(p + 2)->Uint32Value(), (char) colorArr->Get(p + 3)->Uint32Value());
+    c->add_color((int) colorArr->Get(p)->Uint32Value(), (int) colorArr->Get(p + 1)->Uint32Value(),
+                 (int) colorArr->Get(p + 2)->Uint32Value(), (int) colorArr->Get(p + 3)->Uint32Value());
   }
+  c->prepare();
 
   Sparsearray **sparrs = new Sparsearray *[dataarr->Length()];
 
@@ -145,7 +169,7 @@ void CompileVScroll(const Nan::FunctionCallbackInfo <v8::Value> &info) {
     matrix.integrate_sparsearray(myNewSP);
   }
 
-  char *finalImageIntensities = matrix.get_intensity_map(destImageWidth);
+  unsigned char *finalImageIntensities = matrix.get_intensity_map(destImageWidth, c);
 
   /*Local <Array> v8Array = Nan::New<Array>();
   unsigned int matlen = matrix.height;
@@ -157,9 +181,10 @@ void CompileVScroll(const Nan::FunctionCallbackInfo <v8::Value> &info) {
     delete sparrs[s];
   }
   delete[] sparrs;
+  delete c;
 
   //info.GetReturnValue().Set(v8Array);
-  info.GetReturnValue().Set(Nan::NewBuffer(finalImageIntensities, matrix.lastIntensitySize).ToLocalChecked());
+  info.GetReturnValue().Set(Nan::NewBuffer((char *)finalImageIntensities, matrix.lastIntensityIndex).ToLocalChecked());
 }
 
 /**

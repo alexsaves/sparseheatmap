@@ -1,7 +1,10 @@
 #include "sparsematrix.h"
+#include "colorengine.h"
+#include "lodepng.h"
 #include <stddef.h>
 #include <node.h>
 #include <math.h>
+#include <iostream>
 
 /**
  * Constructor for a new sparse matrix
@@ -47,7 +50,7 @@ Sparsematrix::~Sparsematrix() {
 /**
  * Get an intensity map
  */
-char *Sparsematrix::get_intensity_map(int w) {
+unsigned char *Sparsematrix::get_intensity_map(int w, Colorengine *ce) {
   int h = (int) (((float) w / (float) width) * (float) height);
   lastIntensityHeight = h;
   int sz = w * h;
@@ -62,7 +65,7 @@ char *Sparsematrix::get_intensity_map(int w) {
     data[idx] = (unsigned long)((val / fmax) * 255);
   }
   max = 255;
-  char *targ = new char[sz];
+  unsigned char *targ = new unsigned char[sz * 4];
   double hf = (double) h - (double) 1;
   double wf = (double) w - (double) 1;
   double myheight = (double) height - (double) 1;
@@ -89,11 +92,38 @@ char *Sparsematrix::get_intensity_map(int w) {
       double topavr = (tl * (1.0 - xprog)) + (tr * xprog);
       double botavr = (bl * (1.0 - xprog)) + (br * xprog);
       double tots = ((topavr * (1.0 - yprog)) + (botavr * yprog));
-      targ[index++] = (char)tots;
+      Clr intensity_color = ce->get_color((int)tots);
+      targ[index++] = intensity_color.r;
+      targ[index++] = intensity_color.g;
+      targ[index++] = intensity_color.b;
+      targ[index++] = intensity_color.a;
     }
   }
   lastIntensityIndex = index - 1;
-  return targ;
+  /*
+   * unsigned encode(std::vector<unsigned char>& out,
+                    const unsigned char* in, unsigned w, unsigned h,
+                    LodePNGColorType colortype = LCT_RGBA, unsigned bitdepth = 8);
+   */
+  std::vector<unsigned char> outVect;
+  lodepng::encode(outVect, targ, (unsigned)w, (unsigned)h);
+  lastIntensityIndex = outVect.size();
+  /*std::cout << "Outvect size:";
+  std::cout << x;
+  std::cout << "targ size:";
+  std::cout << lastIntensityIndex;
+  std::cout << "\n";*/
+  //std::vector<unsigned char> v(10);
+  unsigned char* myArr = new unsigned char[outVect.size()];
+  std::copy(outVect.begin(), outVect.end(), myArr);
+  delete [] targ;
+  /*
+   * unsigned lodepng_encode32(unsigned char** out, size_t* outsize,
+                          const unsigned char* image, unsigned w, unsigned h);
+   */
+  //unsigned char* outPNG;
+  //lodepng::lodepng_encode32(outPNG)
+  return myArr;
 }
 
 /**

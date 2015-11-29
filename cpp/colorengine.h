@@ -5,19 +5,32 @@
 #ifndef NODE_HEATMAP_COLORENGINE_H
 #define NODE_HEATMAP_COLORENGINE_H
 
+/**
+ * Color
+ */
+struct Clr
+{
+    char r, g, b, a;
+};
+
+/**
+ * Color engine
+ */
 class Colorengine {
 public:
     Colorengine(int);
 
     ~Colorengine();
 
-    void add_color(char r, char g, char b, char a);
+    void add_color(int, int, int, int);
+    void prepare();
+    Clr get_color(int intensity);
+    int *finalcolors;
+    int *data;
+    int colorcount;
 
 private:
-    //Colormodel *models;
-    char *data;
     int cindex;
-    int colors;
 };
 
 

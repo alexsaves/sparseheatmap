@@ -3,6 +3,7 @@
 
 #include <nan.h>
 #include "sparsearray.h"
+#include "colorengine.h"
 
 class Sparsematrix {
 public:
@@ -23,7 +24,7 @@ public:
 
     void set_blob(int x, int y);
 
-    char *get_intensity_map(int w);
+    unsigned char *get_intensity_map(int, Colorengine *);
 
     unsigned int area();
 

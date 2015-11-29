@@ -159,7 +159,7 @@ NodeHeatmap.BLOBTYPE = {
  * @param a
  * @private
  */
-NodeHeatmap.prototype._addColor = function(r, g, b, a) {
+NodeHeatmap.prototype._addColor = function (r, g, b, a) {
     this._colorSets.push(r);
     this._colorSets.push(g);
     this._colorSets.push(b);
@@ -248,6 +248,19 @@ NodeHeatmap.prototype.getFloatXY = function (x, y) {
 };
 
 /**
+ * Convert buffer to an array (slow)
+ * @param buf
+ */
+NodeHeatmap.prototype._bufferToArray = function (buf) {
+    var res = [],
+        blen = buf.length;
+    for (var i = 0; i < blen; i++) {
+        res[i] = buf[i];
+    }
+    return res;
+};
+
+/**
  * Get a png of the heatmap assuming a page width and height
  * @param width - image width
  * @param callback
@@ -256,61 +269,21 @@ NodeHeatmap.prototype.getFloatXY = function (x, y) {
 NodeHeatmap.prototype._getPNG = function (imageWidth, callback) {
     // Compile things just in case
     var resData = this._compile(),
-        imageHeight = Math.round(resData.length / imageWidth);
-
-    console.log(resData);
-    return;
+        imageHeight = (this.width / imageWidth) * this.height;
 
     // Compile some times
     this.times.initTime = this._initTime - this._startTime;
     this.times.compileTime = this._compileEndTime - this._compileStartTime;
 
     if (NodeHeatmap._DEBUGMODE_) {
-        console.log("SparseHeatmap DEBUG: Result data length: ", resData.length, ". Dimensions: ", imageWidth, ", ", imageHeight, " (" + imageHeight + ").");
+        console.log("SparseHeatmap DEBUG: Result data length: ", resData.length, ". Dimensions: ", imageWidth + ", " + imageHeight, " (" + imageHeight + ").");
     }
-    this._pngStartTime = new Date();
 
-    var ctx = this,
-        image = new Jimp(imageWidth, imageHeight, function (err, image) {
-            image.rgba(true);
-            if (NodeHeatmap._DEBUGMODE_) {
-                console.log("Created blank image at " + imageWidth + ", " + imageHeight + ".");
-            }
-            var ce = new ColorEngine(),
-                idx = 0,
-                clr,
-                ph = imageHeight,
-                pw = imageWidth,
-                scaleFactor = imageWidth / ctx.width,
-                incVal = 1 / scaleFactor,
-                data = image.bitmap.data,
-                maxVal = ctx.max;
-
-            for (var y = 0; y < imageHeight; y += 1) {
-                var ybase = y * imageWidth;
-                for (var x = 0; x < imageWidth; x += 1) {
-                    var intensity = resData[ybase + x] / 255,
-                        clr = ce.getColorForIntensity(intensity);
-                    if (clr) {
-                        idx = (imageWidth * y + x) << 2;
-                        data[idx] = clr.r_byte;
-                        data[idx + 1] = clr.g_byte;
-                        data[idx + 2] = clr.b_byte;
-                        data[idx + 3] = clr.a_byte;
-                    }
-                }
-            }
-
-            image.getBuffer(Jimp.MIME_PNG, function (err, buf) {
-                ctx._pngEndTime = new Date();
-                ctx.times.pngTime = ctx._pngEndTime - ctx._pngStartTime;
-                ctx.times.total = ctx.times.pngTime + ctx.times.initTime + ctx.times.compileTime;
-                if (NodeHeatmap._DEBUGMODE_) {
-                    console.log("SparseHeatmap DEBUG:", ctx.times);
-                }
-                callback(buf);
-            });
-        });
+    this.times.total = this.times.initTime + this.times.compileTime;
+    if (NodeHeatmap._DEBUGMODE_) {
+        console.log("SparseHeatmap DEBUG:", this.times);
+    }
+    callback(resData);
 };
 
 
