@@ -2,6 +2,7 @@
 #include <v8.h>
 #include <nan.h>
 #include <stdio.h>
+#include <math.h>
 #include "sparsescroll.h"
 #include "sparsematrix.h"
 #include "sparsearray.h"
@@ -84,26 +85,30 @@ void CompileCanvas(const Nan::FunctionCallbackInfo <v8::Value> &info) {
  */
 void CompileVScroll(const Nan::FunctionCallbackInfo <v8::Value> &info) {
 
-  if (info.Length() < 4) {
-    Nan::ThrowTypeError("Wrong number of arguments: expected 4.");
+  if (info.Length() < 5) {
+    Nan::ThrowTypeError("Wrong number of arguments: expected 5.");
     return;
   }
 
-  if (!info[0]->IsNumber() || !info[1]->IsNumber() || !info[2]->IsArray() || !info[3]->IsNumber()) {
+  if (!info[0]->IsNumber() || !info[1]->IsNumber() || !info[2]->IsArray() || !info[3]->IsNumber() || !info[4]->IsNumber()) {
     Nan::ThrowTypeError(
-            "Wrong arguments: Expected height (Number), data (Array), Output image width (Number).");
+            "Wrong arguments: Expected height (Number), data (Array), Output image width (Number), Y-axis pixel multiplier (Number).");
     return;
   }
 
   double width = info[0]->NumberValue();
   double height = info[1]->NumberValue();
   double destImageWidth = info[3]->NumberValue();
+  int yAxisMultiplier = (int)round((double)info[4]->NumberValue());
+  if (yAxisMultiplier < 1) {
+    yAxisMultiplier = 1;
+  }
   v8::Local <v8::Array> dataarr = v8::Local<v8::Array>::Cast(info[2]);
 
   Sparsearray **sparrs = new Sparsearray *[dataarr->Length()];
 
   // Do the matrix!
-  Sparsescroll matrix(width, height);
+  Sparsescroll matrix(width, height, yAxisMultiplier);
 
   for (unsigned int d = 0; d < dataarr->Length(); d++) {
     Sparsearray *myNewSP = new Sparsearray();

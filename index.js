@@ -16,7 +16,7 @@ var matrixcombine = require('bindings')('sparsematrix'),
  * @constructor
  */
 var NodeHeatmap = function (width, height, imageWidth, layout, arrayofsparsearrays, blobtype, initcallback) {
-    var instructions = "Usage: var hm = new NodeHeatmap(width, height, layout, arrayofsparsearrays, blobtype, initcallback);\n\n";
+    var instructions = "Usage: var hm = new NodeHeatmap(width, height, layout, arrayofsparsearrays, blobtype or yaxismultiplier, initcallback);\n\n";
     if (!width || !height || width < 1 || height < 1) {
         throw new Error(instructions + "Please provide non-zero width and height.");
     }
@@ -28,8 +28,7 @@ var NodeHeatmap = function (width, height, imageWidth, layout, arrayofsparsearra
     this.times = {};
 
     if (layout === layouts.VERTICALSCROLL) {
-        initcallback = blobtype;
-        blobtype = null;
+        this.yaxismultiplier = blobtype;
     }
 
     var fountLayout = false,
@@ -39,7 +38,7 @@ var NodeHeatmap = function (width, height, imageWidth, layout, arrayofsparsearra
             fountLayout = true;
             break;
         } else {
-            possibleLayouts.push("NodeHeatmap.LAYOUTS." + l);
+            possibleLayouts.push("SparseHeatmap.LAYOUTS." + l);
         }
     }
     if (!fountLayout) {
@@ -52,8 +51,8 @@ var NodeHeatmap = function (width, height, imageWidth, layout, arrayofsparsearra
     if (arrayofsparsearrays.length === 0) {
         throw new Error(instructions + "Empty array of sparse arrays provided.");
     }
-    if (!(arrayofsparsearrays[0] instanceof NodeHeatmap.SparseArray)) {
-        throw new Error(instructions + "The array of data must be instances of NodeHeatmap.SparseArray.");
+    if (arrayofsparsearrays.length > 0 && !(arrayofsparsearrays[0] instanceof NodeHeatmap.SparseArray)) {
+        throw new Error(instructions + "The array of data must be instances of SparseHeatmap.SparseArray.");
     }
     this.data = arrayofsparsearrays;
     this._compiledData = null;
@@ -149,7 +148,7 @@ NodeHeatmap.prototype._compile = function () {
     if (!this._compiledData) {
         this._compileStartTime = new Date();
         if (this.layout === layouts.VERTICALSCROLL) {
-            this._compiledData = matrixcombine.compile_vertical_scroll(this.width, this.height, this.data, this.imageWidth);
+            this._compiledData = matrixcombine.compile_vertical_scroll(this.width, this.height, this.data, this.imageWidth, this.yaxismultiplier);
         } else {
             this._compiledData = matrixcombine.compile_canvas(this.width, this.height, this.layout, this.data, this._blobWidth, this._blobHeight, this._blobImg, this.imageWidth);
         }

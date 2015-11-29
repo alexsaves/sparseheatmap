@@ -6,11 +6,11 @@
 
 class Sparsescroll {
 public:
-    Sparsescroll(int, int);
+    Sparsescroll(int, int, int);
 
     ~Sparsescroll();
 
-    int width, height, lastIntensityHeight, lastIntensitySize, lastIntensityIndex;
+    int width, height, lastIntensityHeight, lastIntensitySize, lastIntensityIndex, yMult;
     unsigned long max;
     unsigned long *data;
 

@@ -6,7 +6,8 @@
 /**
  * Constructor for a new sparse matrix
  */
-Sparsescroll::Sparsescroll(int w, int h) {
+Sparsescroll::Sparsescroll(int w, int h, int yaxismultiplier) {
+  yMult = yaxismultiplier;
   set_size(w, h);
 }
 
@@ -36,9 +37,13 @@ Sparsescroll::~Sparsescroll() {
  */
 void Sparsescroll::integrate_sparsearray(Sparsearray *sp) {
   int dlen = sp->datalen;
+  int tidx = 0;
   for (int idx = 0; idx < dlen; idx++) {
-    if (idx < height - 1) {
-      data[idx] += sp->data[idx];
+    unsigned int srcVal = sp->data[idx];
+    for (int k = 0; k < yMult; k++) {
+      if (tidx < height - 1) {
+        data[tidx++] += srcVal;
+      }
     }
   }
 }
@@ -57,8 +62,8 @@ char *Sparsescroll::get_intensity_map(int w) {
   }
   long double fmax = (long double) max;
   for (int idx = 0; idx < osz; idx++) {
-    long double val = (long double)data[idx];
-    data[idx] = (unsigned long)((val / fmax) * 255);
+    long double val = (long double) data[idx];
+    data[idx] = (unsigned long) ((val / fmax) * 255);
   }
   max = 255;
   char *targ = new char[sz];
@@ -70,16 +75,13 @@ char *Sparsescroll::get_intensity_map(int w) {
     double srcy = yp * myheight;
     int floory = (int) floor(srcy);
     int ceily = (int) ceil(srcy);
-    int ybase = floory * width;
-    int yceil = ceily * width;
-    double tt = (double) data[ybase];
-    double bb = (double) data[yceil];
+    double tt = (double) data[floory];
+    double bb = (double) data[ceily];
     double yprog = srcy - (double) floory;
     double tots = ((tt * (1.0 - yprog)) + (bb * yprog));
-    char ctots = (char)tots;
+    char ctots = (char) tots;
     for (int x = 0; x < w; x++) {
-      //targ[index++] = ctots;
-      targ[index++] = tt;
+      targ[index++] = ctots;
     }
   }
   lastIntensityIndex = index - 1;
