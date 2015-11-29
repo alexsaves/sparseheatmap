@@ -6,15 +6,17 @@
 
 class Sparsescroll {
 public:
-    Sparsescroll(int);
+    Sparsescroll(int, int);
 
     ~Sparsescroll();
 
-    int height;
+    int width, height, lastIntensityHeight, lastIntensitySize, lastIntensityIndex;
     unsigned long max;
     unsigned long *data;
 
-    void set_size(int);
+    void set_size(int, int);
+
+    char *get_intensity_map(int w);
 
     void integrate_sparsearray(Sparsearray *);
 

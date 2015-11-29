@@ -22,16 +22,14 @@ for (var i = 0; i < 250; i++) {
 console.log("Data is ready. Parsing..");
 var time1 = new Date();
 var hm = new heatmap(1000, 1500, finalHeatmapWidth, heatmap.LAYOUTS.CENTERFIXEDWIDTH, data, heatmap.BLOBTYPE.LARGE, function (dta) {
-    console.log("Done.");
-    return;
-        var time4 = new Date();
-        fs.writeFile("test/test.png", dta, function (err) {
-            if (err) {
-                return console.log(err);
-            }
-
-            console.log("The click heatmap file was saved! Datapoints: ", totalpoints, "Times: ", (time2 - time1), (time3 - time2), (time4 - time3));
-        });
+    var time2 = new Date();
+    fs.writeFile("test/test.png", dta, function (err) {
+        if (err) {
+            return console.log(err);
+        }
+        var time3 = new Date();
+        console.log("The click heatmap file was saved! Datapoints: ", totalpoints, "Times: ", (time2 - time1), (time3 - time2));
+    });
 
 });
 

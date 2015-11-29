@@ -94,7 +94,7 @@ var NodeHeatmap = function (width, height, imageWidth, layout, arrayofsparsearra
             });
             // Normalize to 20 so the numbers are a bit smaller
             for (var k = 0; k < ctx._blobImg.length; k++) {
-                ctx._blobImg[k] = Math.round((ctx._blobImg[k] / max) * 50);
+                ctx._blobImg[k] = Math.round((ctx._blobImg[k] / max) * 20);
             }
             ctx._initTime = new Date();
             ctx._getPNG(imageWidth, initcallback);
@@ -102,7 +102,7 @@ var NodeHeatmap = function (width, height, imageWidth, layout, arrayofsparsearra
     } else {
         setTimeout(function () {
             ctx._initTime = new Date();
-            initcallback.apply(ctx);
+            ctx._getPNG(imageWidth, initcallback);
         }, 20);
     }
 };
@@ -149,15 +149,9 @@ NodeHeatmap.prototype._compile = function () {
     if (!this._compiledData) {
         this._compileStartTime = new Date();
         if (this.layout === layouts.VERTICALSCROLL) {
-            this._compiledData = matrixcombine.compile_vertical_scroll(this.height, this.data);
+            this._compiledData = matrixcombine.compile_vertical_scroll(this.width, this.height, this.data, this.imageWidth);
         } else {
             this._compiledData = matrixcombine.compile_canvas(this.width, this.height, this.layout, this.data, this._blobWidth, this._blobHeight, this._blobImg, this.imageWidth);
-        }
-        var cd = this._compiledData,
-            cdl = cd.length;
-        this.max = 0.00000001;
-        for (var i = 0; i < cdl; i++) {
-            this.max = Math.max(this.max, cd[i]);
         }
         this._compileEndTime = new Date();
     }
@@ -228,23 +222,24 @@ NodeHeatmap.prototype.getFloatXY = function (x, y) {
  */
 NodeHeatmap.prototype._getPNG = function (imageWidth, callback) {
     // Compile things just in case
-    var res = this._compile(),
-        imageHeight = Math.round((this.height / this.width) * imageWidth);
+    var resData = this._compile(),
+        imageHeight = Math.round(resData.length / imageWidth);
 
     // Compile some times
     this.times.initTime = this._initTime - this._startTime;
     this.times.compileTime = this._compileEndTime - this._compileStartTime;
 
     if (NodeHeatmap._DEBUGMODE_) {
-        console.log("SparseHeatmap DEBUG: Result data length: ", res.length, ". Dimensions: ", imageWidth, ", ", imageHeight, " (" + (res.length / imageWidth) + ").");
+        console.log("SparseHeatmap DEBUG: Result data length: ", resData.length, ". Dimensions: ", imageWidth, ", ", imageHeight, " (" + imageHeight + ").");
     }
-    var tctx = this;
     this._pngStartTime = new Date();
 
     var ctx = this,
         image = new Jimp(imageWidth, imageHeight, function (err, image) {
             image.rgba(true);
-
+            if (NodeHeatmap._DEBUGMODE_) {
+                console.log("Created blank image at " + imageWidth + ", " + imageHeight + ".");
+            }
             var ce = new ColorEngine(),
                 idx = 0,
                 clr,
@@ -255,41 +250,27 @@ NodeHeatmap.prototype._getPNG = function (imageWidth, callback) {
                 data = image.bitmap.data,
                 maxVal = ctx.max;
 
-            if (tctx.layout === layouts.VERTICALSCROLL) {
-                for (var y = 0; y < imageHeight; y += 1) {
-                    var intensity = ctx.getFloatScrollY(y * incVal) / maxVal,
+            for (var y = 0; y < imageHeight; y += 1) {
+                var ybase = y * imageWidth;
+                for (var x = 0; x < imageWidth; x += 1) {
+                    var intensity = resData[ybase + x] / 255,
                         clr = ce.getColorForIntensity(intensity);
                     if (clr) {
-                        for (var x = 0; x < imageWidth; x += 1) {
-                            idx = (imageWidth * y + x) << 2;
-                            data[idx] = clr.r_byte;
-                            data[idx + 1] = clr.g_byte;
-                            data[idx + 2] = clr.b_byte;
-                            data[idx + 3] = clr.a_byte;
-                        }
-                    }
-                }
-            } else {
-                for (var y = 0; y < imageHeight; y += 1) {
-                    for (var x = 0; x < imageWidth; x += 1) {
-                        var intensity = ctx.getFloatXY(x * incVal, y * incVal) / maxVal;
-                        clr = ce.getColorForIntensity(intensity);
-                        if (clr) {
-                            idx = (imageWidth * y + x) << 2;
-                            data[idx] = clr.r_byte;
-                            data[idx + 1] = clr.g_byte;
-                            data[idx + 2] = clr.b_byte;
-                            data[idx + 3] = clr.a_byte;
-                        }
+                        idx = (imageWidth * y + x) << 2;
+                        data[idx] = clr.r_byte;
+                        data[idx + 1] = clr.g_byte;
+                        data[idx + 2] = clr.b_byte;
+                        data[idx + 3] = clr.a_byte;
                     }
                 }
             }
+
             image.getBuffer(Jimp.MIME_PNG, function (err, buf) {
-                tctx._pngEndTime = new Date();
-                tctx.times.pngTime = tctx._pngEndTime - tctx._pngStartTime;
-                tctx.times.total = tctx.times.pngTime + tctx.times.initTime + tctx.times.compileTime;
+                ctx._pngEndTime = new Date();
+                ctx.times.pngTime = ctx._pngEndTime - ctx._pngStartTime;
+                ctx.times.total = ctx.times.pngTime + ctx.times.initTime + ctx.times.compileTime;
                 if (NodeHeatmap._DEBUGMODE_) {
-                    console.log("SparseHeatmap DEBUG:", tctx.times);
+                    console.log("SparseHeatmap DEBUG:", ctx.times);
                 }
                 callback(buf);
             });

@@ -1,5 +1,6 @@
-#include <nan.h>
 #include <node.h>
+#include <v8.h>
+#include <nan.h>
 #include <stdio.h>
 #include "sparsescroll.h"
 #include "sparsematrix.h"
@@ -67,27 +68,15 @@ void CompileCanvas(const Nan::FunctionCallbackInfo <v8::Value> &info) {
     matrix.integrate_sparsearray(myNewSP);
   }
 
-  //int *finalImageIntensities = matrix.get_intensity_map(destImageWidth);
-/*
-  Local <Array> v8Array = Nan::New<Array>();
-  for (int s = 0; s < matrix.lastIntensitySize; s++) {
-    v8Array->Set(s, Nan::New((int) finalImageIntensities[s]));
-  }
-*/
-  Local <Array> v8Array = Nan::New<Array>();
-  int dlen = matrix.width * matrix.height;
-  for (int s = 0; s < dlen; s++) {
-    v8Array->Set(s, Nan::New((int) matrix.data[s]));
-  }
+  char *finalImageIntensities = matrix.get_intensity_map(destImageWidth);
 
   for (unsigned int s = 0; s < dataarr->Length(); s++) {
     delete sparrs[s];
   }
   delete[] sparrs;
   delete[] blobVals;
-  //delete[] finalImageIntensities;
 
-  info.GetReturnValue().Set(v8Array);
+  info.GetReturnValue().Set(Nan::NewBuffer(finalImageIntensities, matrix.lastIntensitySize).ToLocalChecked());
 }
 
 /**
@@ -95,24 +84,26 @@ void CompileCanvas(const Nan::FunctionCallbackInfo <v8::Value> &info) {
  */
 void CompileVScroll(const Nan::FunctionCallbackInfo <v8::Value> &info) {
 
-  if (info.Length() < 2) {
-    Nan::ThrowTypeError("Wrong number of arguments: expected 2.");
+  if (info.Length() < 4) {
+    Nan::ThrowTypeError("Wrong number of arguments: expected 4.");
     return;
   }
 
-  if (!info[0]->IsNumber() || !info[1]->IsArray()) {
+  if (!info[0]->IsNumber() || !info[1]->IsNumber() || !info[2]->IsArray() || !info[3]->IsNumber()) {
     Nan::ThrowTypeError(
-            "Wrong arguments: Expected height (Number), data (Array).");
+            "Wrong arguments: Expected height (Number), data (Array), Output image width (Number).");
     return;
   }
 
-  double height = info[0]->NumberValue();
-  v8::Local <v8::Array> dataarr = v8::Local<v8::Array>::Cast(info[1]);
+  double width = info[0]->NumberValue();
+  double height = info[1]->NumberValue();
+  double destImageWidth = info[3]->NumberValue();
+  v8::Local <v8::Array> dataarr = v8::Local<v8::Array>::Cast(info[2]);
 
   Sparsearray **sparrs = new Sparsearray *[dataarr->Length()];
 
   // Do the matrix!
-  Sparsescroll matrix(height);
+  Sparsescroll matrix(width, height);
 
   for (unsigned int d = 0; d < dataarr->Length(); d++) {
     Sparsearray *myNewSP = new Sparsearray();
@@ -131,18 +122,21 @@ void CompileVScroll(const Nan::FunctionCallbackInfo <v8::Value> &info) {
     matrix.integrate_sparsearray(myNewSP);
   }
 
-  Local <Array> v8Array = Nan::New<Array>();
+  char *finalImageIntensities = matrix.get_intensity_map(destImageWidth);
+
+  /*Local <Array> v8Array = Nan::New<Array>();
   unsigned int matlen = matrix.height;
   for (unsigned int s = 0; s < matlen; s++) {
     v8Array->Set(s, Nan::New((double) matrix.data[s]));
-  }
+  }*/
 
   for (unsigned int s = 0; s < dataarr->Length(); s++) {
     delete sparrs[s];
   }
   delete[] sparrs;
 
-  info.GetReturnValue().Set(v8Array);
+  //info.GetReturnValue().Set(v8Array);
+  info.GetReturnValue().Set(Nan::NewBuffer(finalImageIntensities, matrix.lastIntensitySize).ToLocalChecked());
 }
 
 /**

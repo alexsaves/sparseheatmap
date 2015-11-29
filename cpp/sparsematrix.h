@@ -15,7 +15,7 @@ public:
     unsigned long max;
     unsigned long *data;
     unsigned int *blob;
-    int blobwidth, blobheight, lastIntensityHeight, lastIntensitySize;
+    int blobwidth, blobheight, lastIntensityHeight, lastIntensitySize, lastIntensityIndex;
 
     void set_size(int, int);
 
@@ -23,7 +23,7 @@ public:
 
     void set_blob(int x, int y);
 
-    int * get_intensity_map(int w);
+    char *get_intensity_map(int w);
 
     unsigned int area();
 
