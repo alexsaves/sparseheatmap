@@ -26,6 +26,25 @@ var NodeHeatmap = function (width, height, imageWidth, layout, arrayofsparsearra
     this.max = 0;
     this._startTime = new Date();
     this.times = {};
+    this._colorSets = [];
+
+    // WHITE / TRANSPARENT
+    this._addColor(255, 255, 255, 0);
+
+    // BLUE
+    this._addColor(0, 0, 255, 60);
+
+    // CYAN
+    this._addColor(0, 255, 255, 100);
+
+    // GREEN
+    this._addColor(0, 255, 0, 150);
+
+    // YELLOW
+    this._addColor(255, 255, 0, 190);
+
+    // RED
+    this._addColor(255, 0, 0, 220);
 
     if (layout === layouts.VERTICALSCROLL) {
         this.yaxismultiplier = blobtype;
@@ -133,6 +152,21 @@ NodeHeatmap.BLOBTYPE = {
 };
 
 /**
+ * Add a color to the color set
+ * @param r
+ * @param g
+ * @param b
+ * @param a
+ * @private
+ */
+NodeHeatmap.prototype._addColor = function(r, g, b, a) {
+    this._colorSets.push(r);
+    this._colorSets.push(g);
+    this._colorSets.push(b);
+    this._colorSets.push(a);
+};
+
+/**
  * Get the area
  * @returns {number}
  */
@@ -148,9 +182,9 @@ NodeHeatmap.prototype._compile = function () {
     if (!this._compiledData) {
         this._compileStartTime = new Date();
         if (this.layout === layouts.VERTICALSCROLL) {
-            this._compiledData = matrixcombine.compile_vertical_scroll(this.width, this.height, this.data, this.imageWidth, this.yaxismultiplier);
+            this._compiledData = matrixcombine.compile_vertical_scroll(this.width, this.height, this.data, this.imageWidth, this.yaxismultiplier, this._colorSets);
         } else {
-            this._compiledData = matrixcombine.compile_canvas(this.width, this.height, this.layout, this.data, this._blobWidth, this._blobHeight, this._blobImg, this.imageWidth);
+            this._compiledData = matrixcombine.compile_canvas(this.width, this.height, this.layout, this.data, this._blobWidth, this._blobHeight, this._blobImg, this.imageWidth, this._colorSets);
         }
         this._compileEndTime = new Date();
     }
@@ -223,6 +257,9 @@ NodeHeatmap.prototype._getPNG = function (imageWidth, callback) {
     // Compile things just in case
     var resData = this._compile(),
         imageHeight = Math.round(resData.length / imageWidth);
+
+    console.log(resData);
+    return;
 
     // Compile some times
     this.times.initTime = this._initTime - this._startTime;

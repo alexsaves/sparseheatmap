@@ -7,7 +7,7 @@
         "cpp/sparsearray.cpp",
         "cpp/sparsematrix.cpp",
         "cpp/sparsescroll.cpp",
-        "cpp/colormodel.cpp"
+        "cpp/colorengine.cpp"
       ],
       "include_dirs": [
         "<!(node -e \"require('nan')\")"
