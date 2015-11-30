@@ -23,6 +23,7 @@ var sparse = require('sparseheatmap');
 // sparse.FILTER = sparse.FILTERS.NONE;
 sparse.FILTER = sparse.FILTERS.LOWPASS;
 ```
+![alt tag](https://raw.githubusercontent.com/alexsaves/sparseheatmap/master/docs/images/lowpass_example.png)
 
 ###Custom Color Maps
 A default color map is provided, but you can override it. To do this, override the ``SparseHeatmap.COLORMAP`` array. Populate it with new colors by calling the ``SparseHeatmap.createColorMap(r, g, b, a)`` function which accepts values from between ``0`` and ``255``. Eg:
