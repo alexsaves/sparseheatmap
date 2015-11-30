@@ -172,9 +172,9 @@ NodeHeatmap.prototype._compile = function () {
   if (!this._compiledData) {
     this._compileStartTime = new Date();
     if (this.layout === layouts.VERTICALSCROLL) {
-      this._compiledData = matrixcombine.compile_vertical_scroll(this.width, this.height, this.data, this.imageWidth, this.yaxismultiplier, this._colorSets);
+      this._compiledData = matrixcombine.compile_vertical_scroll(this.width, this.height, this.data, this.imageWidth, this.yaxismultiplier, this._colorSets, NodeHeatmap._DEBUGMODE_ ? 1 : 0);
     } else {
-      this._compiledData = matrixcombine.compile_canvas(this.width, this.height, this.layout, this.data, this._blobWidth, this._blobHeight, this._blobImg, this.imageWidth, this._colorSets);
+      this._compiledData = matrixcombine.compile_canvas(this.width, this.height, this.layout, this.data, this._blobWidth, this._blobHeight, this._blobImg, this.imageWidth, this._colorSets, NodeHeatmap._DEBUGMODE_ ? 1 : 0);
     }
     this._compileEndTime = new Date();
   }
@@ -279,22 +279,22 @@ NodeHeatmap.prototype._getPNG = function (imageWidth, callback) {
 // **************** Set up the color maps
 
 // WHITE / TRANSPARENT
-NodeHeatmap.COLORMAP.concat(NodeHeatmap.createColorMap(255, 255, 255, 0));
+NodeHeatmap.COLORMAP = NodeHeatmap.COLORMAP.concat(NodeHeatmap.createColorMap(255, 255, 255, 0));
 
 // BLUE
-NodeHeatmap.COLORMAP.concat(NodeHeatmap.createColorMap(0, 0, 255, 80));
+NodeHeatmap.COLORMAP = NodeHeatmap.COLORMAP.concat(NodeHeatmap.createColorMap(0, 0, 255, 80));
 
 // CYAN
-NodeHeatmap.COLORMAP.concat(NodeHeatmap.createColorMap(0, 255, 255, 120));
+NodeHeatmap.COLORMAP = NodeHeatmap.COLORMAP.concat(NodeHeatmap.createColorMap(0, 255, 255, 120));
 
 // GREEN
-NodeHeatmap.COLORMAP.concat(NodeHeatmap.createColorMap(0, 255, 0, 160));
+NodeHeatmap.COLORMAP = NodeHeatmap.COLORMAP.concat(NodeHeatmap.createColorMap(0, 255, 0, 160));
 
 // YELLOW
-NodeHeatmap.COLORMAP.concat(NodeHeatmap.createColorMap(255, 255, 0, 200));
+NodeHeatmap.COLORMAP = NodeHeatmap.COLORMAP.concat(NodeHeatmap.createColorMap(255, 255, 0, 200));
 
 // RED
-NodeHeatmap.COLORMAP.concat(NodeHeatmap.createColorMap(255, 0, 0, 230));
+NodeHeatmap.COLORMAP = NodeHeatmap.COLORMAP.concat(NodeHeatmap.createColorMap(255, 0, 0, 230));
 
 // Export it
 module.exports = NodeHeatmap;

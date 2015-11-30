@@ -3,6 +3,8 @@
 #include <nan.h>
 #include <stdio.h>
 #include <math.h>
+#include <stddef.h>
+#include <iostream>
 #include "sparsescroll.h"
 #include "sparsematrix.h"
 #include "sparsearray.h"
@@ -21,16 +23,16 @@ using v8::Array;
  */
 void CompileCanvas(const Nan::FunctionCallbackInfo <v8::Value> &info) {
 
-  if (info.Length() < 9) {
-    Nan::ThrowTypeError("Wrong number of arguments: expected 9.");
+  if (info.Length() < 10) {
+    Nan::ThrowTypeError("Wrong number of arguments: expected 10.");
     return;
   }
 
   if (!info[0]->IsNumber() || !info[1]->IsNumber() || !info[2]->IsNumber() || !info[3]->IsArray() ||
       !info[4]->IsNumber() || !info[5]->IsNumber() || !info[6]->IsArray() || !info[7]->IsNumber() ||
-      !info[8]->IsArray()) {
+      !info[8]->IsArray() || !info[9]->IsNumber()) {
     Nan::ThrowTypeError(
-            "Wrong arguments: Expected width (Number), height (Number), layout (Number), data (Array), blob width (Number), blob height (Number), blob intensity data (Array), imageWidth (Number), colorArray (Array).");
+            "Wrong arguments: Expected width (Number), height (Number), layout (Number), data (Array), blob width (Number), blob height (Number), blob intensity data (Array), imageWidth (Number), colorArray (Array), DebugMode (Number, 0 == no, 1 == yes).");
     return;
   }
 
@@ -41,10 +43,17 @@ void CompileCanvas(const Nan::FunctionCallbackInfo <v8::Value> &info) {
   double blobwidth = info[4]->NumberValue();
   double blobheight = info[5]->NumberValue();
   int destImageWidth = (int) info[7]->NumberValue();
+  int debugMode = (int) info[9]->NumberValue();
+  if (debugMode == 1) {
+    std::cout << "SparseHeatmap DEBUG: Native extensions debug mode on.\n";
+  }
   v8::Local <v8::Array> blobArr = v8::Local<v8::Array>::Cast(info[6]);
   v8::Local <v8::Array> colorArr = v8::Local<v8::Array>::Cast(info[8]);
 
   Colorengine *c = new Colorengine(round((float)colorArr->Length() / 4.0));
+  if (debugMode == 1) {
+      std::cout << "SparseHeatmap DEBUG: Adding " << (colorArr->Length() / 4) << " color maps.\n";
+    }
   for (unsigned int p = 0; p < colorArr->Length(); p += 4) {
     c->add_color((int) colorArr->Get(p)->Uint32Value(), (int) colorArr->Get(p + 1)->Uint32Value(),
                  (int) colorArr->Get(p + 2)->Uint32Value(), (int) colorArr->Get(p + 3)->Uint32Value());
@@ -124,15 +133,19 @@ void CompileVScroll(const Nan::FunctionCallbackInfo <v8::Value> &info) {
   }
 
   if (!info[0]->IsNumber() || !info[1]->IsNumber() || !info[2]->IsArray() || !info[3]->IsNumber() ||
-      !info[4]->IsNumber() || !info[5]->IsArray()) {
+      !info[4]->IsNumber() || !info[5]->IsArray() || !info[6]->IsArray()) {
     Nan::ThrowTypeError(
-            "Wrong arguments: Expected height (Number), data (Array), Output image width (Number), Y-axis pixel multiplier (Number), Color array (Number).");
+            "Wrong arguments: Expected height (Number), data (Array), Output image width (Number), Y-axis pixel multiplier (Number), Color array (Number), Debug mode (Number, 0 == no, 1 == yes).");
     return;
   }
 
   double width = info[0]->NumberValue();
   double height = info[1]->NumberValue();
   double destImageWidth = info[3]->NumberValue();
+  int debugMode = (int) info[6]->NumberValue();
+  if (debugMode == 1) {
+      std::cout << "SparseHeatmap DEBUG: Native extensions debug mode on.\n";
+    }
   int yAxisMultiplier = (int) round((double) info[4]->NumberValue());
   if (yAxisMultiplier < 1) {
     yAxisMultiplier = 1;
@@ -141,6 +154,9 @@ void CompileVScroll(const Nan::FunctionCallbackInfo <v8::Value> &info) {
   v8::Local <v8::Array> colorArr = v8::Local<v8::Array>::Cast(info[5]);
 
   Colorengine *c = new Colorengine(round((float)colorArr->Length() / 4.0));
+  if (debugMode == 1) {
+        std::cout << "SparseHeatmap DEBUG: Adding " << (colorArr->Length() / 4) << " color maps.\n";
+      }
   for (unsigned int p = 0; p < colorArr->Length(); p += 4) {
     c->add_color((int) colorArr->Get(p)->Uint32Value(), (int) colorArr->Get(p + 1)->Uint32Value(),
                  (int) colorArr->Get(p + 2)->Uint32Value(), (int) colorArr->Get(p + 3)->Uint32Value());
