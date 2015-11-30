@@ -85,16 +85,16 @@ unsigned char *Sparsematrix::get_intensity_map(int w, Colorengine *ce) {
     fmax = 0;
     long double downsamplerate = 0.5;
     if (avg < 45) {
-        downsamplerate = 0.42;
+        downsamplerate = 0.46;
     }
     if (avg < 35) {
-        downsamplerate = 0.32;
+        downsamplerate = 0.36;
     }
     if (avg < 25) {
-        downsamplerate = 0.22;
+        downsamplerate = 0.26;
     }
     if (avg < 15) {
-        downsamplerate = 0.12;
+        downsamplerate = 0.16;
     }
     if (avg < 5) {
         downsamplerate = 0.06;
