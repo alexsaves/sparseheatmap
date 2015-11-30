@@ -83,10 +83,26 @@ unsigned char *Sparsematrix::get_intensity_map(int w, Colorengine *ce) {
         std::cout << "SparseHeatmap DEBUG: Implementing low-pass filter..\n";
     }
     fmax = 0;
+    long double downsamplerate = 0.5;
+    if (avg < 45) {
+        downsamplerate = 0.42;
+    }
+    if (avg < 35) {
+        downsamplerate = 0.32;
+    }
+    if (avg < 25) {
+        downsamplerate = 0.22;
+    }
+    if (avg < 15) {
+        downsamplerate = 0.12;
+    }
+    if (avg < 5) {
+        downsamplerate = 0.06;
+    }
     for (int idx = 0; idx < osz; idx++) {
         long double val = (long double)data[idx];
         if (val > (long double)avg) {
-            long double newval = ((val - avg) * 0.5) + avg;
+            long double newval = ((val - avg) * downsamplerate) + avg;
             data[idx] = newval;
             if (newval > fmax) {
                 fmax = newval;
