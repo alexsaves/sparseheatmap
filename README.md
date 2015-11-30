@@ -15,6 +15,15 @@ Canvas heatmaps are traditional spacial maps. These can represent any type of 2D
 ###Intensity Normalization
 The way intensities are calculated is by additively combining all the individual sparse matrices into a single height-map, and then normalizing by the maximum values. In some cases, this can 'wash out' some of the low-intensity detail. In these cases, try playing with the low-pass filter feature.
 
+By default, no filter is applied. To use a low-pass filter, set the ``FILTER`` attribute:
+
+```javascript
+var sparse = require('sparseheatmap');
+
+// sparse.FILTER = sparse.FILTERS.NONE;
+sparse.FILTER = sparse.FILTERS.LOWPASS;
+```
+
 ###Custom Color Maps
 A default color map is provided, but you can override it. To do this, override the ``SparseHeatmap.COLORMAP`` array. Populate it with new colors by calling the ``SparseHeatmap.createColorMap(r, g, b, a)`` function which accepts values from between ``0`` and ``255``. Eg:
 

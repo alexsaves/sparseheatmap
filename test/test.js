@@ -2,6 +2,7 @@ var heatmap = require('../index'),
     fs = require('fs');
 
 heatmap._DEBUGMODE_ = true;
+heatmap.FILTER = heatmap.FILTERS.LOWPASS;
 
 var data = [],
     totalpoints = 0,

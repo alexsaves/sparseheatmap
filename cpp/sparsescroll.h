@@ -7,13 +7,14 @@
 
 class Sparsescroll {
 public:
-    Sparsescroll(int, int, int);
+    Sparsescroll(int, int, int, int, int);
 
     ~Sparsescroll();
 
     int width, height, lastIntensityHeight, lastIntensitySize, lastIntensityIndex, yMult;
     unsigned long max;
     unsigned long *data;
+    int debugMode, filter;
 
     void set_size(int, int);
 

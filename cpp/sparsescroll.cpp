@@ -9,7 +9,9 @@
 /**
  * Constructor for a new sparse matrix
  */
-Sparsescroll::Sparsescroll(int w, int h, int yaxismultiplier) {
+Sparsescroll::Sparsescroll(int w, int h, int yaxismultiplier, int db, int fl) {
+  debugMode = db;
+  filter = fl;
   yMult = yaxismultiplier;
   set_size(w, h);
 }
@@ -64,11 +66,55 @@ unsigned char *Sparsescroll::get_intensity_map(int w, Colorengine *ce) {
     max = (max < data[idx]) ? data[idx] : max;
   }
   long double fmax = (long double) max;
-  for (int idx = 0; idx < osz; idx++) {
-    long double val = (long double) data[idx];
-    data[idx] = (unsigned long) ((val / fmax) * 255);
-  }
-  max = 255;
+    unsigned long total = 0;
+    int dcount = 0;
+    for (int idx = 0; idx < osz; idx++) {
+      long double val = (long double)data[idx];
+      long double newval = (unsigned long)((val / fmax) * 255);
+      data[idx] = newval;
+      total += (unsigned long)newval;
+      if (newval > 0) {
+          dcount++;
+      }
+    }
+    max = 255;
+
+
+  if (filter == 1) {
+      // lowpass
+      double avg = (double)total / (double) dcount;
+      if (debugMode == 1) {
+          std::cout << "SparseHeatmap DEBUG: Average intensity: " << avg << " Max: " << max << "\n";
+          std::cout << "SparseHeatmap DEBUG: Implementing low-pass filter..\n";
+      }
+      fmax = 0;
+      for (int idx = 0; idx < osz; idx++) {
+          long double val = (long double)data[idx];
+          if (val > (long double)avg) {
+              long double newval = ((val - avg) * 0.5) + avg;
+              data[idx] = newval;
+              if (newval > fmax) {
+                  fmax = newval;
+              }
+          }
+        }
+        dcount = 0;
+        total = 0;
+        for (int idx = 0; idx < osz; idx++) {
+            long double val = (long double)data[idx];
+            long double newval = (unsigned long)((val / fmax) * 255);
+            data[idx] = newval;
+            total += (unsigned long)newval;
+            if (newval > 0) {
+                dcount++;
+            }
+          }
+          avg = (double)total / (double) dcount;
+          if (debugMode == 1) {
+                  std::cout << "SparseHeatmap DEBUG: Average intensity is now: " << avg << " Max: " << max << "\n";
+              }
+    }
+
   unsigned char *targ = new unsigned char[sz * 4];
   double hf = (double) h - (double) 1;
   double myheight = (double) height - (double) 1;

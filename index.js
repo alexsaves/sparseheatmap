@@ -2,7 +2,8 @@ var matrixcombine = require('bindings')('sparsematrix'),
   layouts = require('./lib/layouts.js'),
   sparsearray = require('./lib/sparsearray.js'),
   Jimp = require("jimp"),
-  ColorEngine = require('./lib/colorengine.js');
+  ColorEngine = require('./lib/colorengine.js'),
+  pjson = require('./package.json');
 
 /**
  * Sets up a new heatmap
@@ -16,6 +17,9 @@ var matrixcombine = require('bindings')('sparsematrix'),
  * @constructor
  */
 var NodeHeatmap = function (width, height, imageWidth, layout, arrayofsparsearrays, blobtype, initcallback) {
+  if (NodeHeatmap._DEBUGMODE_) {
+    console.log("SparseHeatmap DEBUG: " + pjson.name + " " + pjson.version + ".");
+  }
   var instructions = "Usage: var hm = new NodeHeatmap(width, height, layout, arrayofsparsearrays, blobtype or yaxismultiplier, initcallback);\n\n";
   if (!width || !height || width < 1 || height < 1) {
     throw new Error(instructions + "Please provide non-zero width and height.");
@@ -126,6 +130,21 @@ NodeHeatmap.COLORMAP = [];
 NodeHeatmap.LAYOUTS = layouts;
 
 /**
+ * Possible filters
+ * @type {{NONE: number, LOWPASS: number}}
+ */
+NodeHeatmap.FILTERS = {
+  NONE: 0,
+  LOWPASS: 1
+};
+
+/**
+ * The filter to use
+ * @type {number}
+ */
+NodeHeatmap.FILTER = NodeHeatmap.FILTERS.NONE;
+
+/**
  * Make available the sparse array class
  */
 NodeHeatmap.SparseArray = sparsearray;
@@ -172,9 +191,9 @@ NodeHeatmap.prototype._compile = function () {
   if (!this._compiledData) {
     this._compileStartTime = new Date();
     if (this.layout === layouts.VERTICALSCROLL) {
-      this._compiledData = matrixcombine.compile_vertical_scroll(this.width, this.height, this.data, this.imageWidth, this.yaxismultiplier, this._colorSets, NodeHeatmap._DEBUGMODE_ ? 1 : 0);
+      this._compiledData = matrixcombine.compile_vertical_scroll(this.width, this.height, this.data, this.imageWidth, this.yaxismultiplier, this._colorSets, NodeHeatmap._DEBUGMODE_ ? 1 : 0, NodeHeatmap.FILTER);
     } else {
-      this._compiledData = matrixcombine.compile_canvas(this.width, this.height, this.layout, this.data, this._blobWidth, this._blobHeight, this._blobImg, this.imageWidth, this._colorSets, NodeHeatmap._DEBUGMODE_ ? 1 : 0);
+      this._compiledData = matrixcombine.compile_canvas(this.width, this.height, this.layout, this.data, this._blobWidth, this._blobHeight, this._blobImg, this.imageWidth, this._colorSets, NodeHeatmap._DEBUGMODE_ ? 1 : 0, NodeHeatmap.FILTER);
     }
     this._compileEndTime = new Date();
   }

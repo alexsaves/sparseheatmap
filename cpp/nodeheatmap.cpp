@@ -23,16 +23,16 @@ using v8::Array;
  */
 void CompileCanvas(const Nan::FunctionCallbackInfo <v8::Value> &info) {
 
-  if (info.Length() < 10) {
-    Nan::ThrowTypeError("Wrong number of arguments: expected 10.");
+  if (info.Length() < 11) {
+    Nan::ThrowTypeError("Wrong number of arguments: expected 11.");
     return;
   }
 
   if (!info[0]->IsNumber() || !info[1]->IsNumber() || !info[2]->IsNumber() || !info[3]->IsArray() ||
       !info[4]->IsNumber() || !info[5]->IsNumber() || !info[6]->IsArray() || !info[7]->IsNumber() ||
-      !info[8]->IsArray() || !info[9]->IsNumber()) {
+      !info[8]->IsArray() || !info[9]->IsNumber() || !info[10]->IsNumber()) {
     Nan::ThrowTypeError(
-            "Wrong arguments: Expected width (Number), height (Number), layout (Number), data (Array), blob width (Number), blob height (Number), blob intensity data (Array), imageWidth (Number), colorArray (Array), DebugMode (Number, 0 == no, 1 == yes).");
+            "Wrong arguments: Expected width (Number), height (Number), layout (Number), data (Array), blob width (Number), blob height (Number), blob intensity data (Array), imageWidth (Number), colorArray (Array), DebugMode (Number, 0 == no, 1 == yes), Filter (Number, 0 = none, 1 = lowpass).");
     return;
   }
 
@@ -47,6 +47,10 @@ void CompileCanvas(const Nan::FunctionCallbackInfo <v8::Value> &info) {
   if (debugMode == 1) {
     std::cout << "SparseHeatmap DEBUG: Native extensions debug mode on.\n";
   }
+  int filter = (int) info[10]->NumberValue();
+  if (debugMode == 1) {
+      std::cout << "SparseHeatmap DEBUG: Filter: " << filter << ".\n";
+    }
   v8::Local <v8::Array> blobArr = v8::Local<v8::Array>::Cast(info[6]);
   v8::Local <v8::Array> colorArr = v8::Local<v8::Array>::Cast(info[8]);
 
@@ -70,7 +74,7 @@ void CompileCanvas(const Nan::FunctionCallbackInfo <v8::Value> &info) {
   Sparsearray **sparrs = new Sparsearray *[dataarr->Length()];
 
   // Do the matrix!
-  Sparsematrix matrix(width, height, blobwidth, blobheight, layout, blobVals);
+  Sparsematrix matrix(width, height, blobwidth, blobheight, layout, blobVals, debugMode, filter);
 
   for (unsigned int d = 0; d < dataarr->Length(); d++) {
     Sparsearray *myNewSP = new Sparsearray();
@@ -127,15 +131,15 @@ void CompileCanvas(const Nan::FunctionCallbackInfo <v8::Value> &info) {
  */
 void CompileVScroll(const Nan::FunctionCallbackInfo <v8::Value> &info) {
 
-  if (info.Length() < 6) {
-    Nan::ThrowTypeError("Wrong number of arguments: expected 6.");
+  if (info.Length() < 8) {
+    Nan::ThrowTypeError("Wrong number of arguments: expected 8.");
     return;
   }
 
   if (!info[0]->IsNumber() || !info[1]->IsNumber() || !info[2]->IsArray() || !info[3]->IsNumber() ||
-      !info[4]->IsNumber() || !info[5]->IsArray() || !info[6]->IsArray()) {
+      !info[4]->IsNumber() || !info[5]->IsArray() || !info[6]->IsNumber() || !info[7]->IsNumber()) {
     Nan::ThrowTypeError(
-            "Wrong arguments: Expected height (Number), data (Array), Output image width (Number), Y-axis pixel multiplier (Number), Color array (Number), Debug mode (Number, 0 == no, 1 == yes).");
+            "Wrong arguments: Canvas width (Number), Canvas height (Number), data (Array), Output image width (Number), Y-axis pixel multiplier (Number), Color array (Number), Debug mode (Number, 0 == no, 1 == yes), Filter (Number, 0 = none, 1 = lowpass).");
     return;
   }
 
@@ -146,6 +150,10 @@ void CompileVScroll(const Nan::FunctionCallbackInfo <v8::Value> &info) {
   if (debugMode == 1) {
       std::cout << "SparseHeatmap DEBUG: Native extensions debug mode on.\n";
     }
+  int filter = (int) info[7]->NumberValue();
+  if (debugMode == 1) {
+        std::cout << "SparseHeatmap DEBUG: Filter: " << filter << ".\n";
+      }
   int yAxisMultiplier = (int) round((double) info[4]->NumberValue());
   if (yAxisMultiplier < 1) {
     yAxisMultiplier = 1;
@@ -166,7 +174,7 @@ void CompileVScroll(const Nan::FunctionCallbackInfo <v8::Value> &info) {
   Sparsearray **sparrs = new Sparsearray *[dataarr->Length()];
 
   // Do the matrix!
-  Sparsescroll matrix(width, height, yAxisMultiplier);
+  Sparsescroll matrix(width, height, yAxisMultiplier, debugMode, filter);
 
   for (unsigned int d = 0; d < dataarr->Length(); d++) {
     Sparsearray *myNewSP = new Sparsearray();
