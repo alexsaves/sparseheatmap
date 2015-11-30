@@ -10,7 +10,7 @@ Two general types of heatmaps are supported currently: canvas and scrolling. Scr
 
 Canvas heatmaps are traditional spacial maps. These can represent any type of 2D coordinate data, but the API is oriented around a UI heatmap and includes convenience features for combining responsive UI's.
 
-![alt tag](https://raw.githubusercontent.com/alexsaves/sparseheatmap/master/docs/images/combined_example.png)
+![alt tag](https://raw.githubusercontent.com/alexsaves/sparseheatmap/master/docs/images/overall_example.png)
 
 ###Intensity Normalization
 The way intensities are calculated is by additively combining all the individual sparse matrices into a single height-map, and then normalizing by the maximum values. In some cases, this can 'wash out' some of the low-intensity detail. In these cases, try playing with the high-pass filter feature.
