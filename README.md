@@ -26,6 +26,8 @@ sparse.FILTER = sparse.FILTERS.LOWPASS;
 ![alt tag](https://raw.githubusercontent.com/alexsaves/sparseheatmap/master/docs/images/lp_example.png)
 
 ###Usage
+SparseHeatmap can efficiently combine many individual datasets together into a single heatmap. Think of a dataset (represented by a ``SparseArray``) as a single session. For example, in the case of websites, a single dataset could represent the mouse movements of a particular user. 
+
 Usage varies depending on what type of map you are producing. For regular 2D spacial maps, begin by converting your coordinate data to ``SparseArray`` format like so:
 
 ```javascript
@@ -50,7 +52,9 @@ The ``layout`` attribute is one of the available ``SparseHeatmap.LAYOUTS`` and t
  * ``LEFTFIXEDWIDTH`` - This is for layouts that have a mostly fixed-width but flush with the left-hand side of the UI.
  * ``VERTICALSCROLL`` - This is for scroll heatmaps. This is covered below.
  
-The ``width`` and ``height`` attributes are the pixel sizes of the canvas used to collect these particular coordinates. The ``coords`` paramters is an array of integers in a ``n``, ``x``, ``y`` sequence. The ``n`` value is the 'amplitude' of this coordinate (usually 1), and ``x``, and ``y`` are the coordinates of the data point. This sequence can repeat in a contiguous stream of coordinates.
+The ``width`` and ``height`` attributes are the pixel sizes of the canvas used to collect these particular coordinates. 
+
+The ``coords`` paramters is an array of integers in a ``n``, ``x``, ``y`` sequence. The ``n`` value is the 'amplitude' of this coordinate (usually 1), and ``x``, and ``y`` are the coordinates of the data point. This sequence can repeat in a contiguous stream of coordinates. Amplitudes are for situations where (for example) there are two clicks in exactly the same place for the same dataset.
 
 Once you have an array of ``SparseArray`` instances, pass it to the heatmap constructor:
 
@@ -72,14 +76,45 @@ The ``callback`` attribute, a function, will contain one argument which will be 
 Here is an example:
 
 ```javascript
-var hm = new heatmap(1000, 1500, 2000, heatmap.LAYOUTS.CENTERFIXEDWIDTH, data, heatmap.BLOBTYPE.LARGE, function (dta) {
-  fs.writeFile("test/test.png", dta, function (err) {
+var hm = new heatmap(canvasWidth, canvasHeight, finalPNGWidth, heatmap.LAYOUTS.CENTERFIXEDWIDTH, data, heatmap.BLOBTYPE.LARGE, function (dta) {
+  fs.writeFile("canvas.png", dta, function (err) {
     if (err) {
       return console.log(err);
     }    
   });
 });
 ```
+
+Scroll heatmaps are a little different. We currently handle scroll heatmaps in 1 dimension only. Use a SparseArray, but think of the coordinate data as a string of intensities from a particular session. For example, if you wanted to represent the fact that most users scrolled down the page 5 pixels and stayed there (and had a window size of 10 pixels), you might have a lot of datasets that look like:
+
+```javascript
+[3, 3, 3, 3, 15, 40, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50]
+```
+
+Also, we have the ability to specify a multiplier so that each coordinate actually represents an area of x pixels of screen space. This is for more efficient storage and processing of this data.
+
+```javascript
+var heatmap = require('sparseheatmap');
+
+var data = [];
+// Add two sets of data:
+data.push(new heatmap.SparseArray(heatmap.LAYOUTS.VERTICALSCROLL, 600, 800, [20, 30, 30, 40, 50, ...]));
+data.push(new heatmap.SparseArray(heatmap.LAYOUTS.VERTICALSCROLL, 780, 900, [90, 85, 76, 60, 56, ...]));
+```
+
+Then, when it comes to building the heatmap itself, you can omit the ``BLOBTYPE`` parameter:
+
+```javascript
+var hm = new heatmap(canvasWidth, canvasHeight, finalPNGWidth, heatmap.LAYOUTS.VERTICALSCROLL, data, pixelsPerCoord, function (dta) {
+    fs.writeFile("scroll.png", dta, function (err) {
+        if (err) {
+            return console.log(err);
+        }
+    });
+});
+```
+
+In this example, the ``pixelsPerCoord`` attribute represents the compression - the number of y-axis pixels represented by each step in the data from top to bottom.
 
 ###Custom Color Maps
 A default color map is provided, but you can override it. To do this, override the ``SparseHeatmap.COLORMAP`` array. Populate it with new colors by calling the ``SparseHeatmap.createColorMap(r, g, b, a)`` function which accepts values from between ``0`` and ``255``. Eg:
@@ -107,6 +142,20 @@ sparse.COLORMAP = sparse.COLORMAP.concat(sparse.createColorMap(255, 255, 0, 200)
 // RED
 sparse.COLORMAP = sparse.COLORMAP.concat(sparse.createColorMap(255, 0, 0, 230));
 ```
+###Trimming Edge Values
+It's possible to pass trimming parameters into your heatmap to omit coordinates on the edges of your datasets. You might to this if there is edge-noise in your data that you want efficiently eliminated. You can specify trimming values on canvas heatmaps only:
+
+```javascript
+var hm = new heatmap(canvasWidth, canvasHeight, finalPNGWidth, heatmap.LAYOUTS.CENTERFIXEDWIDTH, data, heatmap.BLOBTYPE.LARGE, function (dta) {
+  fs.writeFile("canvas.png", dta, function (err) {
+    if (err) {
+      return console.log(err);
+    }    
+  });
+}, trimPixelsLeft, trimPixelsTop, trimPixelsRight, trimPixelsBottom);
+```
+
+The trim values are in pixels and specified after your callback.
 
 ###Debug Mode
 Additional console messages (including timings) can be made available by turning on the ``SparseHeatmap._DEBUGMODE_`` boolean.
