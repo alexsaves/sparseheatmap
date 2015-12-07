@@ -14,9 +14,10 @@ var matrixcombine = require('bindings')('sparsematrix'),
  * @param arrayofsparsearrays (Array{NodeHeatmap.SparseArray}) array of sparse arrays
  * @param blobtype {NodeHeatmap.BLOBTYPE} The type of blob to draw with
  * @param initcallback (Function) Callback to fire after initialization is complete
+ * @params trimPixelsLeft, trimPixelsTop, trimPixelsRight, trimPixelsBottom - Trim values (optional)
  * @constructor
  */
-var NodeHeatmap = function (width, height, imageWidth, layout, arrayofsparsearrays, blobtype, initcallback) {
+var NodeHeatmap = function (width, height, imageWidth, layout, arrayofsparsearrays, blobtype, initcallback, trimPixelsLeft, trimPixelsTop, trimPixelsRight, trimPixelsBottom) {
   if (NodeHeatmap._DEBUGMODE_) {
     console.log("SparseHeatmap DEBUG: " + pjson.name + " " + pjson.version + ".");
   }
@@ -31,6 +32,10 @@ var NodeHeatmap = function (width, height, imageWidth, layout, arrayofsparsearra
   this._startTime = new Date();
   this.times = {};
   this._colorSets = NodeHeatmap.COLORMAP;
+  this.trimPixelsLeft = Math.max(trimPixelsLeft || 0);
+  this.trimPixelsTop = Math.max(trimPixelsTop || 0);
+  this.trimPixelsRight = Math.max(trimPixelsRight || 0);
+  this.trimPixelsBottom = Math.max(trimPixelsBottom || 0);
 
   if (layout === layouts.VERTICALSCROLL) {
     this.yaxismultiplier = blobtype;
@@ -193,7 +198,7 @@ NodeHeatmap.prototype._compile = function () {
     if (this.layout === layouts.VERTICALSCROLL) {
       this._compiledData = matrixcombine.compile_vertical_scroll(this.width, this.height, this.data, this.imageWidth, this.yaxismultiplier, this._colorSets, NodeHeatmap._DEBUGMODE_ ? 1 : 0, NodeHeatmap.FILTER);
     } else {
-      this._compiledData = matrixcombine.compile_canvas(this.width, this.height, this.layout, this.data, this._blobWidth, this._blobHeight, this._blobImg, this.imageWidth, this._colorSets, NodeHeatmap._DEBUGMODE_ ? 1 : 0, NodeHeatmap.FILTER);
+      this._compiledData = matrixcombine.compile_canvas(this.width, this.height, this.layout, this.data, this._blobWidth, this._blobHeight, this._blobImg, this.imageWidth, this._colorSets, NodeHeatmap._DEBUGMODE_ ? 1 : 0, NodeHeatmap.FILTER, this.trimPixelsLeft, this.trimPixelsTop, this.trimPixelsRight, this.trimPixelsBottom);
     }
     this._compileEndTime = new Date();
   }

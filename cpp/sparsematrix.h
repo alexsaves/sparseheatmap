@@ -7,7 +7,7 @@
 
 class Sparsematrix {
 public:
-    Sparsematrix(int, int, int, int, int, unsigned int *, int, int);
+    Sparsematrix(int, int, int, int, int, unsigned int *, int, int, int, int, int, int);
 
     ~Sparsematrix();
 
@@ -18,6 +18,7 @@ public:
     unsigned int *blob;
     int debugMode;
     int blobwidth, blobheight, lastIntensityHeight, lastIntensitySize, lastIntensityIndex;
+    int trimPixelsLeft, trimPixelsTop, trimPixelsRight, trimPixelsBottom;
 
     void set_size(int, int);
 

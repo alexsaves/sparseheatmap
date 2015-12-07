@@ -9,7 +9,11 @@
 /**
  * Constructor for a new sparse matrix
  */
-Sparsematrix::Sparsematrix(int w, int h, int bw, int bh, int lt, unsigned int *bdata, int db, int fl) {
+Sparsematrix::Sparsematrix(int w, int h, int bw, int bh, int lt, unsigned int *bdata, int db, int fl, int tpl, int tpt, int tpr, int tpb) {
+  trimPixelsLeft = tpl;
+  trimPixelsTop = tpt;
+  trimPixelsRight = tpr;
+  trimPixelsBottom = tpb;
   debugMode = db;
   filter = fl;
   blobwidth = bw;
@@ -224,25 +228,33 @@ void Sparsematrix::set_blob(int x, int y) {
  */
 void Sparsematrix::integrate_sparsearray(Sparsearray *sp) {
   float spw = (float) sp->width;
+  int opw = (int)sp->width;
+  int oph = (int)sp->height;
   float ow = (float) width;
   int dlen = sp->datalen;
   if (layout == 0) {
     // CENTERFIXEDWIDTH
     int xofs = (int) ((ow - spw) / 2.0);
     for (int idx = 0; idx < dlen; idx += 3) {
-      int nx = (int) ((float) sp->data[idx + 1] + xofs);
+      int ox = sp->data[idx + 1];
       int ny = (int) sp->data[idx + 2];
-      if (ny <= height + blobhalfheight) {
-        set_blob(nx, ny);
+      if (ox > trimPixelsLeft && ox < (opw - trimPixelsRight) && ny > trimPixelsTop && ny < (oph - trimPixelsBottom)) {
+        int nx = (int) ((float) ox + xofs);
+        if (ny <= height + blobhalfheight) {
+          set_blob(nx, ny);
+        }
       }
     }
   } else if (layout == 1) {
     // STRETCH
     for (int idx = 0; idx < dlen; idx += 3) {
-      int nx = (int) (((float) sp->data[idx + 1] / spw) * ow);
+      int ox = sp->data[idx + 1];
+      int nx = (int) (((float) ox / spw) * ow);
       int ny = (int) sp->data[idx + 2];
-      if (ny <= (int) height + (int) blobhalfheight) {
-        set_blob(nx, ny);
+      if (ox > trimPixelsLeft && ox < (opw - trimPixelsRight) && ny > trimPixelsTop && ny < (oph - trimPixelsBottom)) {
+        if (ny <= (int) height + (int) blobhalfheight) {
+          set_blob(nx, ny);
+        }
       }
     }
   } else if (layout == 2) {
@@ -250,7 +262,7 @@ void Sparsematrix::integrate_sparsearray(Sparsearray *sp) {
     for (int idx = 0; idx < dlen; idx += 3) {
       int nx = (int) sp->data[idx + 1];
       int ny = (int) sp->data[idx + 2];
-      if (ny <= (int) height + (int) blobhalfheight) {
+      if (ny <= ((int) height + (int) blobhalfheight) && (nx > trimPixelsLeft && nx < (opw - trimPixelsRight) && ny > trimPixelsTop && ny < (oph - trimPixelsBottom))) {
         set_blob(nx, ny);
       }
     }

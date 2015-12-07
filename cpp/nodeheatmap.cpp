@@ -23,14 +23,15 @@ using v8::Array;
  */
 void CompileCanvas(const Nan::FunctionCallbackInfo <v8::Value> &info) {
 
-  if (info.Length() < 11) {
-    Nan::ThrowTypeError("Wrong number of arguments: expected 11.");
+  if (info.Length() < 15) {
+    Nan::ThrowTypeError("Wrong number of arguments: expected 15.");
     return;
   }
 
   if (!info[0]->IsNumber() || !info[1]->IsNumber() || !info[2]->IsNumber() || !info[3]->IsArray() ||
       !info[4]->IsNumber() || !info[5]->IsNumber() || !info[6]->IsArray() || !info[7]->IsNumber() ||
-      !info[8]->IsArray() || !info[9]->IsNumber() || !info[10]->IsNumber()) {
+      !info[8]->IsArray() || !info[9]->IsNumber() || !info[10]->IsNumber() || !info[11]->IsNumber() ||
+      !info[12]->IsNumber() || !info[13]->IsNumber() || !info[14]->IsNumber()) {
     Nan::ThrowTypeError(
             "Wrong arguments: Expected width (Number), height (Number), layout (Number), data (Array), blob width (Number), blob height (Number), blob intensity data (Array), imageWidth (Number), colorArray (Array), DebugMode (Number, 0 == no, 1 == yes), Filter (Number, 0 = none, 1 = lowpass).");
     return;
@@ -43,21 +44,27 @@ void CompileCanvas(const Nan::FunctionCallbackInfo <v8::Value> &info) {
   double blobwidth = info[4]->NumberValue();
   double blobheight = info[5]->NumberValue();
   int destImageWidth = (int) info[7]->NumberValue();
+
+  int trimPixelsLeft = (int) info[11]->NumberValue();
+  int trimPixelsTop = (int) info[12]->NumberValue();
+  int trimPixelsRight = (int) info[13]->NumberValue();
+  int trimPixelsBottom = (int) info[14]->NumberValue();
+
   int debugMode = (int) info[9]->NumberValue();
   if (debugMode == 1) {
     std::cout << "SparseHeatmap DEBUG: Native extensions debug mode on.\n";
   }
   int filter = (int) info[10]->NumberValue();
   if (debugMode == 1) {
-      std::cout << "SparseHeatmap DEBUG: Filter: " << filter << ".\n";
-    }
+    std::cout << "SparseHeatmap DEBUG: Filter: " << filter << ".\n";
+  }
   v8::Local <v8::Array> blobArr = v8::Local<v8::Array>::Cast(info[6]);
   v8::Local <v8::Array> colorArr = v8::Local<v8::Array>::Cast(info[8]);
 
-  Colorengine *c = new Colorengine(round((float)colorArr->Length() / 4.0));
+  Colorengine *c = new Colorengine(round((float) colorArr->Length() / 4.0));
   if (debugMode == 1) {
-      std::cout << "SparseHeatmap DEBUG: Adding " << (colorArr->Length() / 4) << " color maps.\n";
-    }
+    std::cout << "SparseHeatmap DEBUG: Adding " << (colorArr->Length() / 4) << " color maps.\n";
+  }
   for (unsigned int p = 0; p < colorArr->Length(); p += 4) {
     c->add_color((int) colorArr->Get(p)->Uint32Value(), (int) colorArr->Get(p + 1)->Uint32Value(),
                  (int) colorArr->Get(p + 2)->Uint32Value(), (int) colorArr->Get(p + 3)->Uint32Value());
@@ -74,7 +81,7 @@ void CompileCanvas(const Nan::FunctionCallbackInfo <v8::Value> &info) {
   Sparsearray **sparrs = new Sparsearray *[dataarr->Length()];
 
   // Do the matrix!
-  Sparsematrix matrix(width, height, blobwidth, blobheight, layout, blobVals, debugMode, filter);
+  Sparsematrix matrix(width, height, blobwidth, blobheight, layout, blobVals, debugMode, filter, trimPixelsLeft, trimPixelsTop, trimPixelsRight, trimPixelsBottom);
 
   for (unsigned int d = 0; d < dataarr->Length(); d++) {
     Sparsearray *myNewSP = new Sparsearray();
@@ -122,7 +129,7 @@ void CompileCanvas(const Nan::FunctionCallbackInfo <v8::Value> &info) {
   delete c;
 
   //info.GetReturnValue().Set(Nan::NewBuffer(c->finalcolors, 4 * 256).ToLocalChecked());
-  info.GetReturnValue().Set(Nan::NewBuffer((char *)finalImageIntensities, matrix.lastIntensityIndex).ToLocalChecked());
+  info.GetReturnValue().Set(Nan::NewBuffer((char *) finalImageIntensities, matrix.lastIntensityIndex).ToLocalChecked());
   //info.GetReturnValue().Set(v8Array);
 }
 
@@ -148,12 +155,12 @@ void CompileVScroll(const Nan::FunctionCallbackInfo <v8::Value> &info) {
   double destImageWidth = info[3]->NumberValue();
   int debugMode = (int) info[6]->NumberValue();
   if (debugMode == 1) {
-      std::cout << "SparseHeatmap DEBUG: Native extensions debug mode on.\n";
-    }
+    std::cout << "SparseHeatmap DEBUG: Native extensions debug mode on.\n";
+  }
   int filter = (int) info[7]->NumberValue();
   if (debugMode == 1) {
-        std::cout << "SparseHeatmap DEBUG: Filter: " << filter << ".\n";
-      }
+    std::cout << "SparseHeatmap DEBUG: Filter: " << filter << ".\n";
+  }
   int yAxisMultiplier = (int) round((double) info[4]->NumberValue());
   if (yAxisMultiplier < 1) {
     yAxisMultiplier = 1;
@@ -161,10 +168,10 @@ void CompileVScroll(const Nan::FunctionCallbackInfo <v8::Value> &info) {
   v8::Local <v8::Array> dataarr = v8::Local<v8::Array>::Cast(info[2]);
   v8::Local <v8::Array> colorArr = v8::Local<v8::Array>::Cast(info[5]);
 
-  Colorengine *c = new Colorengine(round((float)colorArr->Length() / 4.0));
+  Colorengine *c = new Colorengine(round((float) colorArr->Length() / 4.0));
   if (debugMode == 1) {
-        std::cout << "SparseHeatmap DEBUG: Adding " << (colorArr->Length() / 4) << " color maps.\n";
-      }
+    std::cout << "SparseHeatmap DEBUG: Adding " << (colorArr->Length() / 4) << " color maps.\n";
+  }
   for (unsigned int p = 0; p < colorArr->Length(); p += 4) {
     c->add_color((int) colorArr->Get(p)->Uint32Value(), (int) colorArr->Get(p + 1)->Uint32Value(),
                  (int) colorArr->Get(p + 2)->Uint32Value(), (int) colorArr->Get(p + 3)->Uint32Value());
@@ -208,7 +215,7 @@ void CompileVScroll(const Nan::FunctionCallbackInfo <v8::Value> &info) {
   delete c;
 
   //info.GetReturnValue().Set(v8Array);
-  info.GetReturnValue().Set(Nan::NewBuffer((char *)finalImageIntensities, matrix.lastIntensityIndex).ToLocalChecked());
+  info.GetReturnValue().Set(Nan::NewBuffer((char *) finalImageIntensities, matrix.lastIntensityIndex).ToLocalChecked());
 }
 
 /**
