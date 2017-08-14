@@ -12,7 +12,7 @@ Canvas heatmaps are traditional spacial maps. These can represent any type of 2D
 
 ![Heatmap types](https://raw.githubusercontent.com/alexsaves/sparseheatmap/master/docs/images/overall_example.png)
 
-###Intensity Normalization
+### Intensity Normalization
 The way intensities are calculated is by additively combining all the individual sparse matrices into a single height-map, and then normalizing by the maximum values. In some cases, this can 'wash out' some of the low-intensity detail. In these cases, try playing with the low-pass filter feature.
 
 By default, no filter is applied. To use a low-pass filter, set the ``FILTER`` attribute:
@@ -25,7 +25,7 @@ sparse.FILTER = sparse.FILTERS.LOWPASS;
 ```
 ![Low-pass filters](https://raw.githubusercontent.com/alexsaves/sparseheatmap/master/docs/images/lp_example.png)
 
-###Usage
+### Usage
 SparseHeatmap can efficiently combine many individual datasets together into a single heatmap. Think of a dataset (represented by a ``SparseArray``) as a single session. For example, in the case of websites, a single dataset could represent the mouse movements of a particular user. 
 
 Usage varies depending on what type of map you are producing. For regular 2D spacial maps, begin by converting your coordinate data to ``SparseArray`` format like so:
@@ -116,7 +116,7 @@ var hm = new heatmap(canvasWidth, canvasHeight, finalPNGWidth, heatmap.LAYOUTS.V
 
 In this example, the ``pixelsPerCoord`` attribute represents the compression - the number of y-axis pixels represented by each step in the data from top to bottom.
 
-###Custom Color Maps
+### Custom Color Maps
 A default color map is provided, but you can override it. To do this, override the ``SparseHeatmap.COLORMAP`` array. Populate it with new colors by calling the ``SparseHeatmap.createColorMap(r, g, b, a)`` function which accepts values from between ``0`` and ``255``. Eg:
 
 ```javascript
@@ -142,7 +142,7 @@ sparse.COLORMAP = sparse.COLORMAP.concat(sparse.createColorMap(255, 255, 0, 200)
 // RED
 sparse.COLORMAP = sparse.COLORMAP.concat(sparse.createColorMap(255, 0, 0, 230));
 ```
-###Trimming Edge Values
+### Trimming Edge Values
 It's possible to pass trimming parameters into your heatmap to omit coordinates on the edges of your datasets. You might to this if there is edge-noise in your data that you want efficiently eliminated. You can specify trimming values on canvas heatmaps only:
 
 ```javascript
@@ -157,7 +157,7 @@ var hm = new heatmap(canvasWidth, canvasHeight, finalPNGWidth, heatmap.LAYOUTS.C
 
 The trim values are in pixels and specified after your callback.
 
-###Debug Mode
+### Debug Mode
 Additional console messages (including timings) can be made available by turning on the ``SparseHeatmap._DEBUGMODE_`` boolean.
 ```javascript
 var sparse = require('sparseheatmap');
