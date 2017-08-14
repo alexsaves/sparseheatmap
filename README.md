@@ -1,11 +1,11 @@
 SparseHeatmap
 ===================
 A high-speed heatmap generator using sparse matrices for NodeJS. Uses native extensions to maximize performance.
-###Installation &nbsp;  [![npm version](https://badge.fury.io/js/sparseheatmap.svg)](http://badge.fury.io/js/sparseheatmap)
+### Installation &nbsp;  [![npm version](https://badge.fury.io/js/sparseheatmap.svg)](http://badge.fury.io/js/sparseheatmap)
 ```sh
 npm install sparseheatmap
 ```
-###Heatmap Types
+### Heatmap Types
 Two general types of heatmaps are supported currently: canvas and scrolling. Scrolling heatmaps show only a vertical heatmap of exposure time for a scrolling region of space.
 
 Canvas heatmaps are traditional spacial maps. These can represent any type of 2D coordinate data, but the API is oriented around a UI heatmap and includes convenience features for combining responsive UI's.
