@@ -4,3 +4,4 @@ node_modules
 test/test2.png
 test/test.png
 test/alignment.png
+/package-lock.json
